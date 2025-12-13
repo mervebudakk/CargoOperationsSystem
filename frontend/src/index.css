@@ -1,0 +1,16 @@
+/* Sayfanın varsayılan boşluklarını sıfırla */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Gereksiz kaydırma çubuklarını engeller */
+}
+
+body {
+  background-color: #242424; /* Varsa arka plan rengi */
+}
