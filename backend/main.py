@@ -16,32 +16,32 @@ app.add_middleware(
 
 # --- VERİLER ---
 stations = [
-# BAŞLANGIÇ: Kocaeli Üniversitesi (Rektörlük Binası Önü)
-    {"id": 0, "name": "KOU Lojistik Merkezi", "lat": 40.8222, "lon": 29.9217},
-    # 1. Başiskele (Belediye Binası ve Merkez) - Dağda değil, sahile yakın merkezde
-    {"id": 1, "name": "Basiskele", "lat": 40.7155, "lon": 29.9276},
-    # 2. Çayırova (Fatih Caddesi - Tam Çarşı)
-    {"id": 2, "name": "Cayirova", "lat": 40.8164, "lon": 29.3734},
-    # 3. Darıca (Çınaraltı / Merkez) - Denize kaymaz, tam çarşı içi
-    {"id": 3, "name": "Darica", "lat": 40.7745, "lon": 29.4009},
-    # 4. Derince (Kent Meydanı / Liman Yolu Girişi)
-    {"id": 4, "name": "Derince", "lat": 40.7562, "lon": 29.8318},
-    # 5. Dilovası (Belediye Önü)
-    {"id": 5, "name": "Dilovasi", "lat": 40.7877, "lon": 29.5432},
-    # 6. Gebze (Tarihi Kent Meydanı - Çoban Mustafa Paşa)
-    {"id": 6, "name": "Gebze", "lat": 40.8025, "lon": 29.4399},
-    # 7. Gölcük (Anıtpark Meydanı)
-    {"id": 7, "name": "Golcuk", "lat": 40.7170, "lon": 29.8242},
-    # 8. Kandıra (Çarşı Merkezi)
+    # 0. BAŞLANGIÇ: KOÜ 
+    {"id": 0, "name": "KOU Lojistik Merkezi", "lat": 40.8198997, "lon": 29.9226879},
+    # 1. Başiskele: Yazının tam üstü 
+    {"id": 1, "name": "Basiskele", "lat":40.7135,"lon":29.9284},
+    # 2. Çayırova: Haritadaki "Çayırova" yazısının merkezi 
+    {"id": 2, "name": "Cayirova", "lat": 40.8338788, "lon": 29.3812750},
+    # 3. Darıca: "Darıca" yazısının tam olduğu yer 
+    {"id": 3, "name": "Darica", "lat": 40.7574953, "lon": 29.3840004},
+    # 4. Derince: Harita etiketinin olduğu nokta
+    {"id": 4, "name": "Derince", "lat": 40.7579779, "lon": 29.8306985},
+    # 5. Dilovası: "Dilovası" yazısının göbeği 
+    {"id": 5, "name": "Dilovasi", "lat": 40.7759471, "lon": 29.5260492},
+    # 6. Gebze: Tam merkez yazı üzeri
+    {"id": 6, "name": "Gebze", "lat": 40.8020, "lon": 29.4310},
+    # 7. Gölcük: Yazının olduğu merkez
+    {"id": 7, "name": "Golcuk", "lat": 40.7170762, "lon": 29.8196354},
+    # 8. Kandıra: Haritadaki kavşak noktası
     {"id": 8, "name": "Kandira", "lat": 41.0708, "lon": 30.1520},
-    # 9. Karamürsel (Sahil Parkı ve Terminal Alanı)
+    # 9. Karamürsel: Sahil şeridindeki yazı
     {"id": 9, "name": "Karamursel", "lat": 40.6924, "lon": 29.6159},
-    # 10. Kartepe (Köseköy Merkezi / Kaymakamlık) - Dağ zirvesi değil, ilçe merkezi
-    {"id": 10, "name": "Kartepe", "lat": 40.7550, "lon": 30.0210},
-    # 11. Körfez (Tütünçiftlik Ağadere Caddesi - Merkez)
-    {"id": 11, "name": "Korfez", "lat": 40.7744, "lon": 29.7366},
-    # 12. İzmit (Belsa Plaza / Yürüyüş Yolu)
-    {"id": 12, "name": "Izmit", "lat": 40.7659, "lon": 29.9416}
+    # 10. Kartepe: Haritadaki "Kartepe" yazısının yeri 
+    {"id": 10, "name": "Kartepe", "lat": 40.7458640, "lon": 30.0112819},
+    # 11. Körfez: "Körfez" yazısının tam ortası 
+    {"id": 11, "name": "Korfez", "lat": 40.7611, "lon": 29.7836},
+    # 12. İzmit: Merkez yazı
+    {"id": 12, "name": "Izmit", "lat": 40.7724095, "lon": 29.9505554}
 ]
 
 @app.get("/stations")
