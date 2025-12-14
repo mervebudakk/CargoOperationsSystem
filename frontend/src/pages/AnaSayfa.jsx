@@ -20,21 +20,50 @@ function AnaSayfa() {
   // Butona basılınca çalışacak fonksiyon
   const handleRotayiHesapla = () => {
     setBilgi("Hesaplanıyor...");
+    setRota([]); // Önceki rotayı temizle
 
     rotayiHesaplaService()
-      .then((veri) => {
-        // Gelen veriyi parçalayalım
-        const gelenRota = veri.rota;
-        const toplamKm = veri.toplam_km;
+        .then((veri) => {
+            
+            // Hata Kontrolü
+            if (!veri || !veri.arac_rotalari || veri.durum !== "VRP Rotalama Tamamlandı") {
+                console.error("VRP Veri Formatı Hatalı veya Başarısız:", veri);
+                setBilgi("Kritik Hata: Rota verisi alınamadı.");
+                return;
+            }
 
-        // Harita formatına çevir: [lat, lon]
-        const cizilecekYol = gelenRota.map(durak => [durak.lat, durak.lon]);
+            // VRP'den gelen çoklu rotaları tek bir liste haline getiriyoruz (Harita için)
+            let tumCizimKoordinatlari = [];
+            
+            // Renk paleti tanımlayalım (3 araç için)
+            const renkler = ["blue", "red", "green", "orange"];
 
-        setRota(cizilecekYol);
-        setBilgi(`Rota Oluşturuldu! Toplam Mesafe: ${toplamKm} km`);
-      })
-      .catch(() => setBilgi("Rota hesaplanırken hata oluştu!"));
-  };
+            // Her bir araç rotasını döngüye al
+            veri.arac_rotalari.forEach((arac_rotasi, index) => {
+                const cizimKordinatlari = arac_rotasi.cizim_koordinatlari;
+
+                tumCizimKoordinatlari.push({
+                    id: arac_rotasi.rota_id, // Bu ID 0, 1 gibi bir sayı olacak
+                    yol: cizimKordinatlari,
+                    // Index'e göre renk ata: (0 -> blue, 1 -> red)
+                    renk: renkler[index % renkler.length], 
+                    musteri_sayisi: arac_rotasi.musteriler.length,
+                    km: arac_rotasi.toplam_km
+                });
+            });
+
+            setRota(tumCizimKoordinatlari); 
+            
+            setBilgi(
+                `✅ Rota Tamam! ${veri.arac_sayisi} Araç Kullanıldı. Toplam KM: ${veri.genel_toplam_km.toFixed(2)}`
+            ); 
+
+        })
+        .catch((hata) => {
+            console.error("Rota hesaplama API hatası:", hata);
+            setBilgi("Rota hesaplanırken kritik hata oluştu! (Konsolu kontrol et)");
+        });
+};
 
   return (
     <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>

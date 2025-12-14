@@ -19,7 +19,7 @@ if not url or not key:
 else:
     supabase = create_client(url, key)
 
-def istasyonlari_veritabanindan_cek():
+def istasyonlari_dbden_cek():
     """Veritabanına bağlanır ve tüm istasyonları getirir."""
     if not supabase:
         print("UYARI: Veritabanı bağlantısı yok.")
@@ -35,6 +35,9 @@ def istasyonlari_veritabanindan_cek():
             "id": satir["id"],
             "isim": satir["isim"],
             "lat": satir["lat"],
-            "lon": satir["lon"]
+            "lon": satir["lon"],
+            # Yeni verileri ekliyoruz:
+            "kargo_agirlik": satir.get("kargo_agirlik", 0),
+            "kargo_adet": satir.get("kargo_adet", 0)
         })
     return istasyon_listesi

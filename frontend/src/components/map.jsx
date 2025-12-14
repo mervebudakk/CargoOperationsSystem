@@ -13,16 +13,35 @@ const Harita = ({ istasyonlar, rota, merkezKonum }) => {
       {/* İstasyon Noktaları */}
       {istasyonlar.map((istasyon) => (
         <Marker key={istasyon.id} position={[istasyon.lat, istasyon.lon]}>
-          <Popup>{istasyon.isim}</Popup>
+          <Popup>
+            <div style={{ textAlign: 'center' }}>
+              <strong>{istasyon.isim}</strong> <br />
+              📦 Yük: {istasyon.kargo_agirlik} kg <br />
+              🔢 Adet: {istasyon.kargo_adet}
+            </div>
+          </Popup>
         </Marker>
       ))}
 
-      {/* Kırmızı Rota Çizgisi */}
-      {rota.length > 0 && (
-        <Polyline positions={rota} color="red" weight={4} dashArray="10, 10" />
-      )}
-    </MapContainer>
-  );
+      {/* Çoklu Rota Çizgileri (Artık birden fazla olabilir) */}
+      {rota.length > 0 && rota.map((aracRota, index) => (
+        <Polyline 
+          key={index} 
+          positions={aracRota.yol} // Yol koordinatları
+          color={aracRota.renk} // Rota ID'sine göre renk (Mavi veya Kırmızı)
+          weight={4} 
+          opacity={0.7}
+          dashArray="10, 10" 
+        >
+          <Popup>
+            <strong>ARAÇ ROTA {aracRota.id + 1}</strong> <br/>
+            Durak Sayısı: {aracRota.musteri_sayisi} <br/>
+            Toplam KM: {aracRota.km.toFixed(2)}
+          </Popup>
+        </Polyline>
+      ))}
+    </MapContainer>
+  );
 };
 
 export default Harita;
