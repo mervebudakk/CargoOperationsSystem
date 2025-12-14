@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 // Bu bileşen sadece "göstermekten" sorumludur. Veriyi (props) dışarıdan alır.
 const Harita = ({ istasyonlar, rota, merkezKonum }) => {
   return (
-    <MapContainer center={merkezKonum} zoom={10} style={{ height: '100%', width: '100%' }}>
+    <MapContainer center={merkezKonum} zoom={10} style={{ height: '100%', width: '100vw' }}>
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
