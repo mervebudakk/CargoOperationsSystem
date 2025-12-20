@@ -5,36 +5,72 @@ import {
   senaryoYukleriniGetirService,
   senaryoOlusturService,
 } from "../services/api";
+import "../styles/App.css";
+
 
 export default function SenaryoGirisi() {
   const [stations, setStations] = useState([]);
   const [scenarios, setScenarios] = useState([]);
-  const [selectedScenarioId, setSelectedScenarioId] = useState(1);
+  const [selectedScenarioId, setSelectedScenarioId] = useState(null);
 
   const [name, setName] = useState("");
   const [aciklama, setAciklama] = useState("");
-  const [rows, setRows] = useState([]); // { istasyon_id, isim, adet, agirlik_kg }
+  const [rows, setRows] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const ilceler = useMemo(
     () => stations.filter((s) => s.id !== 0).sort((a, b) => a.id - b.id),
     [stations]
   );
 
-  // ilk yükleme
+
+  // 🔄 Backend hazır olana kadar bekleyen yükleme (retry + timeout)
   useEffect(() => {
-    (async () => {
-      const [st, sc] = await Promise.all([
-        istasyonlariGetirService(),
-        senaryolariGetirService(),
-      ]);
-      setStations(st);
-      setScenarios(sc);
-    })();
+    let cancelled = false;
+    const startTime = Date.now();
+    const MAX_WAIT = 180000; // 3 dakika
+
+    const loadData = async () => {
+      try {
+        const [st, sc] = await Promise.all([
+          istasyonlariGetirService(),
+          senaryolariGetirService(),
+        ]);
+
+        if (cancelled) return;
+
+        setStations(st);
+        setScenarios(sc);
+
+        if (sc.length > 0) {
+          setSelectedScenarioId(sc[0].id);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        if (Date.now() - startTime > MAX_WAIT) {
+          setError("Backend başlatılamadı. Lütfen daha sonra tekrar deneyin.");
+          setLoading(false);
+          return;
+        }
+
+        // 2 saniye sonra tekrar dene
+        setTimeout(loadData, 2000);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // senaryo seçilince tabloyu doldur
+  // 📦 Senaryo seçilince tabloyu doldur
   useEffect(() => {
-    if (!stations.length || !scenarios.length) return;
+    if (!selectedScenarioId || !stations.length) return;
 
     (async () => {
       const yukler = await senaryoYukleriniGetirService(selectedScenarioId);
@@ -51,12 +87,12 @@ export default function SenaryoGirisi() {
       });
 
       setRows(newRows);
-      const sc = scenarios.find((x) => x.id === Number(selectedScenarioId));
+
+      const sc = scenarios.find((x) => x.id === selectedScenarioId);
       setName(sc?.name ?? "");
       setAciklama(sc?.aciklama ?? "");
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedScenarioId, stations, scenarios]);
+  }, [selectedScenarioId, stations, scenarios, ilceler]);
 
   const onChangeCell = (idx, field, value) => {
     const v = value === "" ? "" : Number(value);
@@ -66,7 +102,6 @@ export default function SenaryoGirisi() {
   };
 
   const kaydet = async () => {
-    // boş stringleri 0'a çevir
     const yukler = rows.map((r) => ({
       alim_istasyon_id: r.istasyon_id,
       adet: Number(r.adet || 0),
@@ -78,12 +113,31 @@ export default function SenaryoGirisi() {
     const created = await senaryoOlusturService(payload);
     alert(`Senaryo kaydedildi. ID: ${created.id}`);
 
-    // senaryo listesini güncelle
     const sc = await senaryolariGetirService();
     setScenarios(sc);
     setSelectedScenarioId(created.id);
   };
 
+  // ⏳ YÜKLENİYOR EKRANI
+  if (loading) {
+    return (
+      <div style={loadingStyle}>
+        <div style={spinnerStyle}></div>
+        <div style={{ marginTop: 16 }}>Yükleniyor...</div>
+      </div>
+    );
+  }
+
+  // ❌ HATA EKRANI
+  if (error) {
+    return (
+      <div style={errorStyle}>
+        ❌ {error}
+      </div>
+    );
+  }
+
+  // ✅ NORMAL EKRAN
   return (
     <div style={{ padding: 16 }}>
       <h2>Senaryo Girişi</h2>
@@ -106,7 +160,7 @@ export default function SenaryoGirisi() {
 
         <button
           onClick={() => {
-            setSelectedScenarioId(1);
+            setSelectedScenarioId(null);
             setName("");
             setAciklama("");
             setRows(
@@ -123,24 +177,24 @@ export default function SenaryoGirisi() {
         </button>
       </div>
 
-      <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
         <input
           placeholder="Senaryo adı"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ padding: 8, minWidth: 260 }}
+          style={inp}
         />
         <input
           placeholder="Açıklama"
           value={aciklama}
           onChange={(e) => setAciklama(e.target.value)}
-          style={{ padding: 8, minWidth: 360 }}
+          style={inp}
         />
         <button onClick={kaydet}>Kaydet</button>
       </div>
 
       <div style={{ marginTop: 16, overflowX: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 640 }}>
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
               <th style={th}>İlçe</th>
@@ -166,7 +220,9 @@ export default function SenaryoGirisi() {
                     type="number"
                     min="0"
                     value={r.agirlik_kg}
-                    onChange={(e) => onChangeCell(idx, "agirlik_kg", e.target.value)}
+                    onChange={(e) =>
+                      onChangeCell(idx, "agirlik_kg", e.target.value)
+                    }
                     style={inp}
                   />
                 </td>
@@ -178,6 +234,32 @@ export default function SenaryoGirisi() {
     </div>
   );
 }
+
+/* 🎨 STYLES */
+
+const loadingStyle = {
+  height: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  fontSize: 20,
+};
+
+const spinnerStyle = {
+  width: 50,
+  height: 50,
+  border: "5px solid #f3f3f3",
+  borderTop: "5px solid #3498db",
+  borderRadius: "50%",
+  animation: "spin 1s linear infinite",
+};
+
+const errorStyle = {
+  padding: 24,
+  color: "red",
+  fontSize: 18,
+};
 
 const th = {
   border: "1px solid #444",
@@ -191,6 +273,6 @@ const td = {
 };
 
 const inp = {
-  width: "100%",
   padding: 6,
+  minWidth: 200,
 };
