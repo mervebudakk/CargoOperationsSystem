@@ -1,47 +1,43 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Bu bileşen sadece "göstermekten" sorumludur. Veriyi (props) dışarıdan alır.
-const Harita = ({ istasyonlar, rota, merkezKonum }) => {
-  return (
-    <MapContainer center={merkezKonum} zoom={10} style={{ height: '100%', width: '100vw' }}>
-      <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+const MapEvents = ({ onMapClick, role }) => {
+  useMapEvents({
+    click(e) {
+      if (role === 'admin' && onMapClick) onMapClick(e.latlng);
+    },
+  });
+  return null;
+};
 
-      {/* İstasyon Noktaları */}
-      {istasyonlar.map((istasyon) => (
-        <Marker key={istasyon.id} position={[istasyon.lat, istasyon.lon]}>
+const Harita = ({ istasyonlar, rota, merkezKonum, onMapClick, role }) => {
+  return (
+    <MapContainer center={merkezKonum} zoom={10} style={{ height: '100%', width: '100%' }}>
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <MapEvents onMapClick={onMapClick} role={role} />
+
+      {istasyonlar.map((ist) => (
+        <Marker key={ist.id} position={[ist.lat, ist.lon]}>
           <Popup>
             <div style={{ textAlign: 'center' }}>
-              <strong>{istasyon.isim}</strong> <br />
-              📦 Yük: {istasyon.kargo_agirlik} kg <br />
-              🔢 Adet: {istasyon.kargo_adet}
+              <strong>{ist.isim}</strong> <br />
+              📦 Yük: {ist.kargo_agirlik} kg <br />
+              🔢 Adet: {ist.kargo_adet}
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {/* Çoklu Rota Çizgileri (Artık birden fazla olabilir) */}
-      {rota.length > 0 && rota.map((aracRota, index) => (
-        <Polyline 
-          key={index} 
-          positions={aracRota.yol} // Yol koordinatları
-          color={aracRota.renk} // Rota ID'sine göre renk (Mavi veya Kırmızı)
-          weight={4} 
-          opacity={0.7}
-          dashArray="10, 10" 
-        >
-          <Popup>
-            <strong>ARAÇ ROTA {aracRota.id + 1}</strong> <br/>
-            Durak Sayısı: {aracRota.musteri_sayisi} <br/>
-            Toplam KM: {aracRota.km.toFixed(2)}
-          </Popup>
-        </Polyline>
-      ))}
-    </MapContainer>
-  );
+      {rota.length > 0 && rota.map((aracRota, index) => (
+        <Polyline key={index} positions={aracRota.yol} color={aracRota.renk} weight={4} opacity={0.7} dashArray="10, 10">
+          <Popup>
+            <strong>ARAÇ ROTA {aracRota.id + 1}</strong> <br/>
+            Durak Sayısı: {aracRota.musteri_sayisi} <br/>
+            KM: {aracRota.km.toFixed(2)}
+          </Popup>
+        </Polyline>
+      ))}
+    </MapContainer>
+  );
 };
-
 export default Harita;
