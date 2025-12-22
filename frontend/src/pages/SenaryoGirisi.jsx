@@ -1,278 +1,141 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  istasyonlariGetirService,
-  senaryolariGetirService,
-  senaryoYukleriniGetirService,
-  senaryoOlusturService,
-} from "../services/api";
-import "../styles/App.css";
-
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function SenaryoGirisi() {
-  const [stations, setStations] = useState([]);
-  const [scenarios, setScenarios] = useState([]);
-  const [selectedScenarioId, setSelectedScenarioId] = useState(null);
+  const [senaryolar, setSenaryolar] = useState([]);
+  const [seciliSenaryoId, setSeciliSenaryoId] = useState("");
+  const [yukler, setYukler] = useState([]);
+  const [istasyonlar, setIstasyonlar] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [name, setName] = useState("");
-  const [aciklama, setAciklama] = useState("");
-  const [rows, setRows] = useState([]);
+  // Form State
+  const [yeniYuk, setYeniYuk] = useState({ istasyon_id: "", adet: "", agirlik: "" });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const ilceler = useMemo(
-    () => stations.filter((s) => s.id !== 0).sort((a, b) => a.id - b.id),
-    [stations]
-  );
-
-
-  // 🔄 Backend hazır olana kadar bekleyen yükleme (retry + timeout)
   useEffect(() => {
-    let cancelled = false;
-    const startTime = Date.now();
-    const MAX_WAIT = 180000; // 3 dakika
-
-    const loadData = async () => {
-      try {
-        const [st, sc] = await Promise.all([
-          istasyonlariGetirService(),
-          senaryolariGetirService(),
-        ]);
-
-        if (cancelled) return;
-
-        setStations(st);
-        setScenarios(sc);
-
-        if (sc.length > 0) {
-          setSelectedScenarioId(sc[0].id);
-        }
-
-        setLoading(false);
-      } catch (err) {
-        if (Date.now() - startTime > MAX_WAIT) {
-          setError("Backend başlatılamadı. Lütfen daha sonra tekrar deneyin.");
-          setLoading(false);
-          return;
-        }
-
-        // 2 saniye sonra tekrar dene
-        setTimeout(loadData, 2000);
-      }
-    };
-
-    loadData();
-
-    return () => {
-      cancelled = true;
-    };
+    fetchInitialData();
   }, []);
 
-  // 📦 Senaryo seçilince tabloyu doldur
+  // Senaryo değiştiğinde o senaryonun yüklerini getir
   useEffect(() => {
-    if (!selectedScenarioId || !stations.length) return;
+    if (seciliSenaryoId) fetchSenaryoYukleri(seciliSenaryoId);
+  }, [seciliSenaryoId]);
 
-    (async () => {
-      const yukler = await senaryoYukleriniGetirService(selectedScenarioId);
-      const map = new Map(yukler.map((y) => [y.alim_istasyon_id, y]));
-
-      const newRows = ilceler.map((s) => {
-        const y = map.get(s.id);
-        return {
-          istasyon_id: s.id,
-          isim: s.isim,
-          adet: y?.adet ?? 0,
-          agirlik_kg: y?.agirlik_kg ?? 0,
-        };
-      });
-
-      setRows(newRows);
-
-      const sc = scenarios.find((x) => x.id === selectedScenarioId);
-      setName(sc?.name ?? "");
-      setAciklama(sc?.aciklama ?? "");
-    })();
-  }, [selectedScenarioId, stations, scenarios, ilceler]);
-
-  const onChangeCell = (idx, field, value) => {
-    const v = value === "" ? "" : Number(value);
-    setRows((prev) =>
-      prev.map((r, i) => (i === idx ? { ...r, [field]: v } : r))
-    );
+  const fetchInitialData = async () => {
+    // Mevcut senaryoları ve istasyonları çek
+    const { data: sData } = await supabase.from("senaryolar").select("*").order("created_at", { ascending: false });
+    const { data: iData } = await supabase.from("istasyonlar").select("id, isim").order("isim");
+    if (sData) setSenaryolar(sData);
+    if (iData) setIstasyonlar(iData);
   };
 
-  const kaydet = async () => {
-    const yukler = rows.map((r) => ({
-      alim_istasyon_id: r.istasyon_id,
-      adet: Number(r.adet || 0),
-      agirlik_kg: Number(r.agirlik_kg || 0),
-    }));
-
-    const payload = { name, aciklama, yukler };
-
-    const created = await senaryoOlusturService(payload);
-    alert(`Senaryo kaydedildi. ID: ${created.id}`);
-
-    const sc = await senaryolariGetirService();
-    setScenarios(sc);
-    setSelectedScenarioId(created.id);
+  const fetchSenaryoYukleri = async (sId) => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("senaryo_yukleri")
+      .select("*, istasyonlar(isim)")
+      .eq("senaryo_id", sId);
+    if (data) setYukler(data);
+    setLoading(false);
   };
 
-  // ⏳ YÜKLENİYOR EKRANI
-  if (loading) {
-    return (
-      <div style={loadingStyle}>
-        <div style={spinnerStyle}></div>
-        <div style={{ marginTop: 16 }}>Yükleniyor...</div>
-      </div>
-    );
-  }
+  const handleAddLoad = async (e) => {
+    e.preventDefault();
+    if (!seciliSenaryoId || !yeniYuk.istasyon_id) return alert("Senaryo ve istasyon seçiniz!");
 
-  // ❌ HATA EKRANI
-  if (error) {
-    return (
-      <div style={errorStyle}>
-        ❌ {error}
-      </div>
-    );
-  }
+    const { error } = await supabase.from("senaryo_yukleri").upsert({
+      senaryo_id: seciliSenaryoId,
+      alim_istasyon_id: yeniYuk.istasyon_id,
+      adet: parseInt(yeniYuk.adet),
+      agirlik_kg: parseInt(yeniYuk.agirlik)
+    });
 
-  // ✅ NORMAL EKRAN
+    if (error) alert("Hata: " + error.message);
+    else {
+      fetchSenaryoYukleri(seciliSenaryoId);
+      setYeniYuk({ istasyon_id: "", adet: "", agirlik: "" });
+    }
+  };
+
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Senaryo Girişi</h2>
-
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <label>
-          Hazır Senaryo:
-          <select
-            value={selectedScenarioId}
-            onChange={(e) => setSelectedScenarioId(Number(e.target.value))}
-            style={{ marginLeft: 8 }}
-          >
-            {scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} (#{s.id})
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          onClick={() => {
-            setSelectedScenarioId(null);
-            setName("");
-            setAciklama("");
-            setRows(
-              ilceler.map((s) => ({
-                istasyon_id: s.id,
-                isim: s.isim,
-                adet: 0,
-                agirlik_kg: 0,
-              }))
-            );
-          }}
+    <div style={{ padding: "20px" }}>
+      
+      {/* 1. Senaryo Seçimi (Geçmiş Verilerin Korunması İçin) */}
+      <div style={sectionStyle}>
+        <label style={labelStyle}>İşlem Yapılacak Senaryoyu Seçin:</label>
+        <select 
+          style={inputStyle} 
+          value={seciliSenaryoId} 
+          onChange={(e) => setSeciliSenaryoId(e.target.value)}
         >
-          Yeni Senaryo Başlat
-        </button>
+          <option value="">--- Senaryo Seçin ---</option>
+          {senaryolar.map(s => (
+            <option key={s.id} value={s.id}>{s.name} ({new Date(s.created_at).toLocaleDateString()})</option>
+          ))}
+        </select>
       </div>
 
-      <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
-        <input
-          placeholder="Senaryo adı"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={inp}
-        />
-        <input
-          placeholder="Açıklama"
-          value={aciklama}
-          onChange={(e) => setAciklama(e.target.value)}
-          style={inp}
-        />
-        <button onClick={kaydet}>Kaydet</button>
-      </div>
+      {seciliSenaryoId && (
+        <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+          {/* 2. Yeni Kargo Giriş Formu */}
+          <div style={{ ...sectionStyle, flex: 1 }}>
+            <h3>➕ Yeni Kargo Girişi</h3>
+            <form onSubmit={handleAddLoad} style={{ display: "grid", gap: "10px" }}>
+              <select 
+                style={inputStyle} 
+                value={yeniYuk.istasyon_id}
+                onChange={(e) => setYeniYuk({...yeniYuk, istasyon_id: e.target.value})}
+              >
+                <option value="">Hedef İstasyon</option>
+                {istasyonlar.map(i => <option key={i.id} value={i.id}>{i.isim}</option>)}
+              </select>
+              <input 
+                type="number" placeholder="Paket Adedi" style={inputStyle}
+                value={yeniYuk.adet} onChange={(e) => setYeniYuk({...yeniYuk, adet: e.target.value})}
+              />
+              <input 
+                type="number" placeholder="Toplam Ağırlık (kg)" style={inputStyle}
+                value={yeniYuk.agirlik} onChange={(e) => setYeniYuk({...yeniYuk, agirlik: e.target.value})}
+              />
+              <button type="submit" style={btnStyle}>Kargoyu Kaydet</button>
+            </form>
+          </div>
 
-      <div style={{ marginTop: 16, overflowX: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th style={th}>İlçe</th>
-              <th style={th}>Kargo Sayısı</th>
-              <th style={th}>Ağırlık (kg)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, idx) => (
-              <tr key={r.istasyon_id}>
-                <td style={td}>{r.isim}</td>
-                <td style={td}>
-                  <input
-                    type="number"
-                    min="0"
-                    value={r.adet}
-                    onChange={(e) => onChangeCell(idx, "adet", e.target.value)}
-                    style={inp}
-                  />
-                </td>
-                <td style={td}>
-                  <input
-                    type="number"
-                    min="0"
-                    value={r.agirlik_kg}
-                    onChange={(e) =>
-                      onChangeCell(idx, "agirlik_kg", e.target.value)
-                    }
-                    style={inp}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          {/* 3. Senaryo İçeriği (Tablo Görünümü) */}
+          <div style={{ ...sectionStyle, flex: 2, maxHeight: "500px", overflowY: "auto" }}>
+            <h3>📋 Senaryo Yük Listesi</h3>
+            {loading ? <p>Yükleniyor...</p> : (
+              <table style={tableStyle}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #444" }}>
+                    <th style={thStyle}>İstasyon</th>
+                    <th style={thStyle}>Adet</th>
+                    <th style={thStyle}>Ağırlık</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {yukler.map((y, idx) => (
+                    <tr key={idx} style={{ borderBottom: "1px solid #333" }}>
+                      <td style={tdStyle}>{y.istasyonlar?.isim}</td>
+                      <td style={tdStyle}>{y.adet}</td>
+                      <td style={tdStyle}>{y.agirlik_kg} kg</td>
+                    </tr>
+                  ))}
+                  {yukler.length === 0 && <tr><td colSpan="3" style={{padding: "10px", textAlign: "center"}}>Bu senaryoda henüz yük yok.</td></tr>}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* 🎨 STYLES */
-
-const loadingStyle = {
-  height: "100vh",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-  fontSize: 20,
-};
-
-const spinnerStyle = {
-  width: 50,
-  height: 50,
-  border: "5px solid #f3f3f3",
-  borderTop: "5px solid #3498db",
-  borderRadius: "50%",
-  animation: "spin 1s linear infinite",
-};
-
-const errorStyle = {
-  padding: 24,
-  color: "red",
-  fontSize: 18,
-};
-
-const th = {
-  border: "1px solid #444",
-  padding: 8,
-  textAlign: "left",
-};
-
-const td = {
-  border: "1px solid #444",
-  padding: 8,
-};
-
-const inp = {
-  padding: 6,
-  minWidth: 200,
-};
+// Stiller
+const sectionStyle = { background: "#1e1e1e", padding: "20px", borderRadius: "10px", border: "1px solid #333" };
+const labelStyle = { display: "block", marginBottom: "10px", fontWeight: "bold", color: "#aaa" };
+const inputStyle = { padding: "10px", background: "#2a2a2a", color: "white", border: "1px solid #444", borderRadius: "5px", width: "100%" };
+const btnStyle = { padding: "12px", background: "#4caf50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" };
+const tableStyle = { width: "100%", borderCollapse: "collapse", marginTop: "10px" };
+const thStyle = { textAlign: "left", padding: "10px", color: "#4caf50" };
+const tdStyle = { padding: "10px", color: "#ccc" };

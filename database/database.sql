@@ -163,8 +163,15 @@ INSERT INTO araclar (isim, kapasite_kg, kiralama_maliyeti, kiralanabilir) VALUES
 ('Araç 3 (1000 kg)', 1000, 0, FALSE),
 ('Kiralanabilir Araç (500 kg)', 500, 200, TRUE);
 
--- ===========================================================
--- NOT: RLS / Policy'leri şu aşamada eklemedim.
--- Çünkü daha Auth/Users akışı kurulmadan RLS açmak, testte veri okuyamama yaratabiliyor.
--- Auth + admin/user login akışını kurunca RLS bölümünü ekleriz.
--- ===========================================================
+
+CREATE TABLE IF NOT EXISTS gonderiler (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  senaryo_id INT REFERENCES senaryolar(id) ON DELETE CASCADE,
+  alim_istasyon_id BIGINT REFERENCES istasyonlar(id),
+  teslim_istasyon_id BIGINT REFERENCES istasyonlar(id) DEFAULT 0, -- 0: KOU Lojistik Merkezi
+  agirlik_kg NUMERIC NOT NULL CHECK (agirlik_kg > 0),
+  hacim_desi NUMERIC NOT NULL CHECK (hacim_desi > 0),
+  durum TEXT DEFAULT 'beklemede', -- beklemede, rotalandı, yolda, teslim edildi
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
