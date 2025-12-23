@@ -7,6 +7,7 @@ import IstasyonEkleme from "./pages/IstasyonYonetimi";
 import AracYonetimi from "./pages/AracYonetimi"; 
 import KargoGonder from "./pages/KargoGonder"; 
 import Kargolarim from "./pages/Kargolarim";
+import KullaniciYonetimi from "./pages/KullaniciYonetimi";
 import { istasyonlariGetirService } from "./services/api";
 
 export default function App() {
@@ -106,6 +107,7 @@ export default function App() {
             {view === "senaryo" && "📋 Senaryo Yönetimi"}
             {view === "kargo_gonder" && "🚀 Kargo Gönderimi"}
             {view === "kargolarim" && "📦 Gönderilerim"}
+            {view === "kullanici_yonetimi" && "👥 Kullanicilarim"}
           </span>
         </div>
         <div style={{ fontSize: "0.85rem", color: "#aaa" }}>
@@ -125,6 +127,8 @@ export default function App() {
                 <div style={{ ...navItemStyle, background: view === "istasyon_yonetimi" ? "#333" : "transparent" }} onClick={() => handleNavItemClick("istasyon_yonetimi")}>🏗️ İstasyon Yönetimi</div>
                 <div style={{ ...navItemStyle, background: view === "arac_yonetimi" ? "#333" : "transparent" }} onClick={() => handleNavItemClick("arac_yonetimi")}>🚛 Araç Yönetimi</div>
                 <div style={{ ...navItemStyle, background: view === "senaryo" ? "#333" : "transparent" }} onClick={() => handleNavItemClick("senaryo")}>📋 Senaryo Oluştur</div>
+                <div style={{ ...navItemStyle, background: view === "kullanici_yonetimi" ? "#333" : "transparent" }} 
+     onClick={() => handleNavItemClick("kullanici_yonetimi")}>👥 Kullanıcı Yönetimi</div>
               </>
             )}
 
@@ -173,6 +177,7 @@ export default function App() {
           {view === "istasyon_yonetimi" && (role === "admin" ? <IstasyonEkleme /> : <div style={errorStyle}>Yetkisiz Erişim</div>)}
           {view === "arac_yonetimi" && (role === "admin" ? <AracYonetimi /> : <div style={errorStyle}>Yetkisiz Erişim</div>)}
           {view === "senaryo" && (role === "admin" ? <SenaryoGirisi /> : <div style={errorStyle}>Yetkisiz Erişim</div>)}
+          {view === "kullanici_yonetimi" && (role === "admin" ? <KullaniciYonetimi /> : <div style={errorStyle}>Yetkisiz Erişim</div>)}
           
           {/* USER ÖZEL SAYFALAR */}
           {view === "kargo_gonder" && <KargoGonder userId={session.user.id} />}
