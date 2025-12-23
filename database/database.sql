@@ -175,3 +175,24 @@ CREATE TABLE IF NOT EXISTS gonderiler (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE kargolar (
+    id bigint primary key generated always as identity,
+    gonderen_id uuid references auth.users(id), -- Giriş yapan kullanıcı
+    alici_isim text not null,
+    cikis_istasyon_id bigint references istasyonlar(id), -- Hangi ilçeye gidecek
+    agirlik_kg float not null,
+    adet int not null default 1,
+    durum text default 'Beklemede', -- Beklemede, Yolda, Teslim Edildi
+    olusturma_tarihi timestamp with time zone default now()
+);
+
+-- RLS Ayarı: Herkes kendi kargosunu görsün, Admin hepsini görsün
+ALTER TABLE kargolar ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Kullanıcılar sadece kendi kargolarını görebilir" 
+ON kargolar FOR SELECT 
+USING (auth.uid() = gonderen_id);
+
+CREATE POLICY "Kullanıcılar kargo oluşturabilir" 
+ON kargolar FOR INSERT 
+WITH CHECK (auth.uid() = gonderen_id);

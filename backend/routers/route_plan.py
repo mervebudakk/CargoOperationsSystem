@@ -12,6 +12,12 @@ from typing import List
 
 router = APIRouter()
 
+class CargoCreate(BaseModel):
+    alici_isim: str
+    cikis_istasyon_id: int
+    agirlik_kg: float
+    adet: int
+
 class YukItem(BaseModel):
     alim_istasyon_id: int
     adet: int
@@ -79,3 +85,31 @@ def rotayi_coz_endpoint(senaryo_id: int = Query(1)):
         # Sistem çökmesin diye hatayı yakalayıp ekrana gönderiyoruz
         print(f"HATA: {str(e)}")
         return {"hata": f"Bir iç hata oluştu: {str(e)}"}
+    
+
+@router.post("/send-cargo")
+def kargo_gonder(payload: CargoCreate, user_id: str = Query(...)):
+    """
+    Kullanıcının oluşturduğu kargoyu veritabanına kaydeder.
+    """
+    try:
+        resp = supabase.table("kargolar").insert({
+            "gonderen_id": user_id,
+            "alici_isim": payload.alici_isim,
+            "cikis_istasyon_id": payload.cikis_istasyon_id,
+            "agirlik_kg": payload.agirlik_kg,
+            "adet": payload.adet,
+            "durum": "Beklemede"
+        }).execute()
+        
+        return {"mesaj": "Kargo başarıyla oluşturuldu", "data": resp.data}
+    except Exception as e:
+        return {"hata": str(e)}
+
+@router.get("/my-cargos")
+def kullanici_kargolarini_getir(user_id: str = Query(...)):
+    """
+    Kullanıcının sadece kendi gönderdiği kargoları listeler.
+    """
+    resp = supabase.table("kargolar").select("*, istasyonlar(isim)").eq("gonderen_id", user_id).execute()
+    return resp.data
