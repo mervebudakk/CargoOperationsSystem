@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from services.supabase_service import (
-    supabase,
+    supabase, # Eğer burada hata verirse supabase_admin yazabilirsin
     istasyonlari_dbden_cek,
     senaryolari_dbden_cek,
     senaryo_yuklerini_cek,
@@ -43,6 +43,8 @@ def senaryo_olustur(payload: ScenarioCreate):
 
 @router.get("/stations")
 def istasyonlari_getir_endpoint():
+    # Bu fonksiyon supabase_service içindeki çalışan fonksiyonu kullanır
+    # Haritadaki istasyonların geri gelmesini sağlar
     return istasyonlari_dbden_cek()
 
 @router.get("/scenarios")
@@ -55,6 +57,25 @@ def senaryo_detay(senaryo_id: int):
 
 @router.get("/solve-route")
 def rotayi_coz_endpoint(senaryo_id: int = Query(1)):
-    veriler = istasyonlari_senaryo_ile_birlestir(senaryo_id)
-    sonuc = rotayi_clark_wright_ile_hesapla(veriler)
-    return sonuc
+    try:
+        # 1. İstasyonları ve o senaryoya ait kargo yüklerini çek
+        veriler = istasyonlari_senaryo_ile_birlestir(senaryo_id)
+        
+        # 2. Araçları çek (Hata almamak için doğrudan supabase_service üzerinden gidelim)
+        araclar_resp = supabase.table("araclar").select("*").execute()
+        araclar = araclar_resp.data if (araclar_resp and araclar_resp.data) else []
+        
+        # Terminale yazdırarak kontrol edelim (Sadece debug için)
+        print(f"DEBUG: Çekilen Araç Sayısı: {len(araclar)}")
+
+        if not araclar:
+            return {"hata": "Veritabanında araç bulunamadı. Lütfen Araç Yönetimi ekranından araç ekleyin."}
+
+        # 3. Algoritmayı çalıştır
+        sonuc = rotayi_clark_wright_ile_hesapla(veriler, araclar)
+        return sonuc
+        
+    except Exception as e:
+        # Sistem çökmesin diye hatayı yakalayıp ekrana gönderiyoruz
+        print(f"HATA: {str(e)}")
+        return {"hata": f"Bir iç hata oluştu: {str(e)}"}
