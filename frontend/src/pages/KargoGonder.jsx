@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { istasyonlariGetirService } from "../services/api";
+import { styles } from "../styles/KargoGonder.styles";
 
 function KargoGonder({ userId }) {
   const [istasyonlar, setIstasyonlar] = useState([]);
   const [form, setForm] = useState({
-    alici_isim: "",
     cikis_istasyon_id: "",
     agirlik_kg: "",
     adet: 1
   });
   const [mesaj, setMesaj] = useState("");
+  const [mesajTipi, setMesajTipi] = useState(""); // "success", "error", "loading"
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. İstasyonları yükle (Kullanıcının seçebileceği varış noktaları)
+  // 1. İstasyonları yükle
   useEffect(() => {
     istasyonlariGetirService().then(setIstasyonlar);
   }, []);
@@ -19,7 +21,9 @@ function KargoGonder({ userId }) {
   // 2. Kargo Gönderme İşlemi
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMesaj("Gönderiliyor...");
+    setIsSubmitting(true);
+    setMesaj("Kargonuz oluşturuluyor...");
+    setMesajTipi("loading");
 
     try {
       const response = await fetch(`http://localhost:8000/send-cargo?user_id=${userId}`, {
@@ -34,89 +38,152 @@ function KargoGonder({ userId }) {
       });
 
       const res = await response.json();
+      
       if (res.hata) {
-        setMesaj("Hata: " + res.hata);
+        setMesaj("❌ Hata: " + res.hata);
+        setMesajTipi("error");
       } else {
-        setMesaj("Kargonuz başarıyla oluşturuldu! Admin onayı bekleniyor.");
-        setForm({ alici_isim: "", cikis_istasyon_id: "", agirlik_kg: "", adet: 1 });
+        setMesaj("✅ Kargonuz başarıyla oluşturuldu! Admin onayı bekleniyor.");
+        setMesajTipi("success");
+        setForm({ cikis_istasyon_id: "", agirlik_kg: "", adet: 1 });
       }
     } catch (error) {
-      setMesaj("Sunucu bağlantı hatası!");
+      setMesaj("❌ Sunucu bağlantı hatası! Lütfen tekrar deneyin.");
+      setMesajTipi("error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Mesaj stilini belirle
+  const getStatusStyle = () => {
+    const baseStyle = styles.statusMessage;
+    if (mesajTipi === "success") return { ...baseStyle, ...styles.statusSuccess };
+    if (mesajTipi === "error") return { ...baseStyle, ...styles.statusError };
+    if (mesajTipi === "loading") return { ...baseStyle, ...styles.statusLoading };
+    return baseStyle;
+  };
+
   return (
-    <div style={containerStyle}>
-      <h2 style={{ color: "#2196F3" }}>📦 Yeni Kargo Gönder</h2>
-      <p style={{ color: "#aaa" }}>Lütfen gönderi detaylarını eksiksiz giriniz.</p>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>
+          <span>📦</span>
+          <span>Yeni Kargo Gönder</span>
+        </h2>
+        <p style={styles.subtitle}>
+          Varış Noktası:
+          <span style={styles.destinationBadge}>
+            🎯 Kocaeli Üniversitesi (Umuttepe)
+          </span>
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} style={formStyle}>
-        <div style={inputGroup}>
-          <label>Alıcı Adı Soyadı</label>
-          <input 
-            type="text" 
-            required 
-            value={form.alici_isim}
-            onChange={(e) => setForm({...form, alici_isim: e.target.value})}
-            style={inputStyle}
-          />
+      <div style={styles.infoBox}>
+        <div style={styles.infoTitle}>
+          <span>ℹ️</span>
+          <span>Kargo Gönderim Bilgilendirmesi</span>
         </div>
+        <p style={styles.infoText}>
+          Kargonuz oluşturulduktan sonra operasyon ekibi tarafından onaylanacak ve 
+          rota planlamasına dahil edilecektir. Durumunu "Kargolarım" sayfasından takip edebilirsiniz.
+        </p>
+      </div>
 
-        <div style={inputGroup}>
-          <label>Çıkış İlçesi</label>
-          <select 
-            required 
-            value={form.cikis_istasyon_id}
-            onChange={(e) => setForm({...form, cikis_istasyon_id: e.target.value})}
-            style={inputStyle}
-          >
-            <option value="">İstasyon Seçiniz...</option>
-  {istasyonlar
-    .filter(ist => ist.isim !== "KOU Lojistik Merkezi") 
-    .map(ist => (
-      <option key={ist.id} value={ist.id}>{ist.isim}</option>
-    ))
-  }
-          </select>
-        </div>
-
-        <div style={{ display: "flex", gap: "10px" }}>
-          <div style={{ ...inputGroup, flex: 1 }}>
-            <label>Ağırlık (kg)</label>
-            <input 
-              type="number" 
-              step="0.1" 
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.formCard}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>
+              Çıkış İlçesi
+              <span style={styles.requiredStar}>*</span>
+            </label>
+            <select 
               required 
-              value={form.agirlik_kg}
-              onChange={(e) => setForm({...form, agirlik_kg: e.target.value})}
-              style={inputStyle}
-            />
+              value={form.cikis_istasyon_id}
+              onChange={(e) => setForm({...form, cikis_istasyon_id: e.target.value})}
+              style={styles.select}
+              disabled={isSubmitting}
+            >
+              <option value="">İlçe Seçiniz...</option>
+              {istasyonlar
+                .filter(ist => ist.isim !== "Kocaeli Universitesi") 
+                .map(ist => (
+                  <option key={ist.id} value={ist.id}>
+                    📍 {ist.isim}
+                  </option>
+                ))
+              }
+            </select>
+            <span style={styles.helperText}>
+              Kargonuzun hangi ilçeden gönderileceğini seçin
+            </span>
           </div>
-          <div style={{ ...inputGroup, flex: 1 }}>
-            <label>Adet</label>
-            <input 
-              type="number" 
-              required 
-              value={form.adet}
-              onChange={(e) => setForm({...form, adet: e.target.value})}
-              style={inputStyle}
-            />
+
+          <hr style={styles.divider} />
+
+          <div style={styles.flexRow}>
+            <div style={{ ...styles.inputGroup, ...styles.flexItem }}>
+              <label style={styles.label}>
+                Ağırlık (kg)
+                <span style={styles.requiredStar}>*</span>
+              </label>
+              <input 
+                type="number" 
+                step="0.1" 
+                min="0.1"
+                required 
+                placeholder="Örn: 2.5"
+                value={form.agirlik_kg}
+                onChange={(e) => setForm({...form, agirlik_kg: e.target.value})}
+                style={styles.input}
+                disabled={isSubmitting}
+              />
+              <span style={styles.helperText}>
+                Toplam ağırlık (kg cinsinden)
+              </span>
+            </div>
+
+            <div style={{ ...styles.inputGroup, ...styles.flexItem }}>
+              <label style={styles.label}>
+                Adet
+                <span style={styles.requiredStar}>*</span>
+              </label>
+              <input 
+                type="number" 
+                min="1"
+                required 
+                placeholder="Örn: 3"
+                value={form.adet}
+                onChange={(e) => setForm({...form, adet: e.target.value})}
+                style={styles.input}
+                disabled={isSubmitting}
+              />
+              <span style={styles.helperText}>
+                Kargo paketi sayısı
+              </span>
+            </div>
           </div>
         </div>
 
-        <button type="submit" style={buttonStyle}>Kargoyu Oluştur 🚀</button>
-        {mesaj && <p style={statusStyle}>{mesaj}</p>}
+        <button 
+          type="submit" 
+          style={{
+            ...styles.button,
+            ...(isSubmitting ? styles.buttonDisabled : {})
+          }}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "⏳ İşleniyor..." : "🚀 Kargoyu Oluştur"}
+        </button>
+
+        {mesaj && (
+          <div style={getStatusStyle()}>
+            {mesaj}
+          </div>
+        )}
       </form>
     </div>
   );
 }
-
-// Stiller
-const containerStyle = { maxWidth: "500px", margin: "40px auto", padding: "20px", background: "#1e1e1e", borderRadius: "10px", border: "1px solid #333" };
-const formStyle = { display: "flex", flexDirection: "column", gap: "15px", marginTop: "20px" };
-const inputGroup = { display: "flex", flexDirection: "column", gap: "5px" };
-const inputStyle = { padding: "12px", borderRadius: "5px", border: "1px solid #444", background: "#2a2a2a", color: "white", outline: "none" };
-const buttonStyle = { padding: "12px", background: "#2196F3", color: "white", border: "none", borderRadius: "5px", fontWeight: "bold", cursor: "pointer" };
-const statusStyle = { marginTop: "15px", textAlign: "center", color: "#4caf50", fontWeight: "bold" };
 
 export default KargoGonder;

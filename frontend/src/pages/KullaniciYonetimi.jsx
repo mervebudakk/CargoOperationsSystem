@@ -13,23 +13,29 @@ function KullaniciYonetimi() {
   const kullanicilariGetir = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("users")
-      .select(`
-        id,
-        email,
-        created_at,
-        roles (name)
-      `);
+  .from("users")
+  .select(`
+    id,
+    email,
+    first_name,
+    last_name,
+    created_at,
+    roles (name)
+  `);
 
     if (error) {
       console.error("Kullanıcılar yüklenemedi:", error);
     } else {
       // Önce Adminleri üste al, sonra e-postaya göre alfabetik sırala
-      const siraliData = data.sort((a, b) => {
-        if (a.roles?.name === "admin" && b.roles?.name !== "admin") return -1;
-        if (a.roles?.name !== "admin" && b.roles?.name === "admin") return 1;
-        return a.email.localeCompare(b.email);
-      });
+      // Sıralama mantığı güncellemesi:
+const siraliData = data.sort((a, b) => {
+  if (a.roles?.name === "admin" && b.roles?.name !== "admin") return -1;
+  if (a.roles?.name !== "admin" && b.roles?.name === "admin") return 1;
+  // E-posta yerine artık Ad-Soyad ile alfabetik sıralama
+  const adA = `${a.first_name} ${a.last_name}`.toLocaleLowerCase('tr');
+  const adB = `${b.first_name} ${b.last_name}`.toLocaleLowerCase('tr');
+  return adA.localeCompare(adB, 'tr');
+});
       setKullanicilar(siraliData);
     }
     setLoading(false);
@@ -59,6 +65,7 @@ function KullaniciYonetimi() {
         <table style={{ width: "100%", borderCollapse: "collapse", color: "white" }}>
           <thead>
             <tr style={headerRowStyle}>
+                <th style={thStyle}>Ad Soyad</th>
               <th style={thStyle}>E-posta</th>
               <th style={thStyle}>Rol</th>
               <th style={thStyle}>Kayıt Tarihi</th>
@@ -70,6 +77,7 @@ function KullaniciYonetimi() {
             ) : filtrelenmişKullanicilar.length > 0 ? (
               filtrelenmişKullanicilar.map((user) => (
                 <tr key={user.id} style={rowStyle}>
+                    <td>{user.first_name} {user.last_name}</td>
                   <td style={tdStyle}>{user.email}</td>
                   <td style={tdStyle}>
                     <span style={{ 

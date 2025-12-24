@@ -1,0 +1,138 @@
+-- SENARYO 1: 113 SATIRLIK TAM VERİ SETİ
+INSERT INTO public.kargolar (gonderen_id, cikis_istasyon_id, agirlik_kg, adet, durum) VALUES
+-- Başiskele (ID: 1) - 10 Kargo, Toplam 120kg
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 1, 10, 1, 'Beklemede'),
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 1, 11, 1, 'Beklemede'),
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 1, 12, 1, 'Beklemede'),
+('30576761-e7e0-4abb-b90c-71315c144e71', 1, 13, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 1, 14, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 1, 10, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 1, 11, 1, 'Beklemede'),
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 1, 12, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 1, 13, 1, 'Beklemede'),
+('7df1f52c-7789-440d-95f1-2613d246f20b', 1, 14, 1, 'Beklemede'),
+
+-- Çayırova (ID: 2) - 8 Kargo, Toplam 80kg
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 2, 8, 1, 'Beklemede'),
+('990263e9-9176-49d0-81ad-55fef5fb034b', 2, 9, 1, 'Beklemede'),
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 2, 10, 1, 'Beklemede'),
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 2, 11, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 2, 12, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 2, 9, 1, 'Beklemede'),
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 2, 11, 1, 'Beklemede'),
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 2, 10, 1, 'Beklemede'),
+
+-- Darıca (ID: 3) - 15 Kargo, Toplam 200kg
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 3, 12, 1, 'Beklemede'),
+('30576761-e7e0-4abb-b90c-71315c144e71', 3, 13, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 3, 14, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 3, 15, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 3, 16, 1, 'Beklemede'),
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 3, 12, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 3, 13, 1, 'Beklemede'),
+('7df1f52c-7789-440d-95f1-2613d246f20b', 3, 14, 1, 'Beklemede'),
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 3, 15, 1, 'Beklemede'),
+('990263e9-9176-49d0-81ad-55fef5fb034b', 3, 16, 1, 'Beklemede'),
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 3, 12, 1, 'Beklemede'),
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 3, 13, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 3, 14, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 3, 15, 1, 'Beklemede'),
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 3, 16, 1, 'Beklemede'),
+
+-- Derince (ID: 4) - 10 Kargo, Toplam 150kg
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 4, 13, 1, 'Beklemede'),
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 4, 14, 1, 'Beklemede'),
+('30576761-e7e0-4abb-b90c-71315c144e71', 4, 15, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 4, 16, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 4, 17, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 4, 13, 1, 'Beklemede'),
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 4, 14, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 4, 15, 1, 'Beklemede'),
+('7df1f52c-7789-440d-95f1-2613d246f20b', 4, 16, 1, 'Beklemede'),
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 4, 17, 1, 'Beklemede'),
+
+-- Dilovası (ID: 5) - 12 Kargo, Toplam 180kg
+('990263e9-9176-49d0-81ad-55fef5fb034b', 5, 14, 1, 'Beklemede'),
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 5, 15, 1, 'Beklemede'),
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 5, 16, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 5, 17, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 5, 14, 1, 'Beklemede'),
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 5, 15, 1, 'Beklemede'),
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 5, 16, 1, 'Beklemede'),
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 5, 17, 1, 'Beklemede'),
+('30576761-e7e0-4abb-b90c-71315c144e71', 5, 14, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 5, 15, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 5, 16, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 5, 15, 1, 'Beklemede'),
+
+-- Gebze (ID: 6) - 5 Kargo, Toplam 70kg
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 6, 12, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 6, 13, 1, 'Beklemede'),
+('7df1f52c-7789-440d-95f1-2613d246f20b', 6, 14, 1, 'Beklemede'),
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 6, 15, 1, 'Beklemede'),
+('990263e9-9176-49d0-81ad-55fef5fb034b', 6, 16, 1, 'Beklemede'),
+
+-- Gölcük (ID: 7) - 7 Kargo, Toplam 90kg
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 7, 12, 1, 'Beklemede'),
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 7, 13, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 7, 14, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 7, 15, 1, 'Beklemede'),
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 7, 12, 1, 'Beklemede'),
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 7, 11, 1, 'Beklemede'),
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 7, 13, 1, 'Beklemede'),
+
+-- Kandıra (ID: 8) - 6 Kargo, Toplam 60kg
+('30576761-e7e0-4abb-b90c-71315c144e71', 8, 8, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 8, 9, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 8, 10, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 8, 11, 1, 'Beklemede'),
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 8, 12, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 8, 10, 1, 'Beklemede'),
+
+-- Karamürsel (ID: 9) - 9 Kargo, Toplam 110kg
+('7df1f52c-7789-440d-95f1-2613d246f20b', 9, 11, 1, 'Beklemede'),
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 9, 12, 1, 'Beklemede'),
+('990263e9-9176-49d0-81ad-55fef5fb034b', 9, 13, 1, 'Beklemede'),
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 9, 14, 1, 'Beklemede'),
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 9, 15, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 9, 11, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 9, 12, 1, 'Beklemede'),
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 9, 11, 1, 'Beklemede'),
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 9, 11, 1, 'Beklemede'),
+
+-- Kartepe (ID: 10) - 11 Kargo, Toplam 130kg
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 10, 10, 1, 'Beklemede'),
+('30576761-e7e0-4abb-b90c-71315c144e71', 10, 11, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 10, 12, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 10, 13, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 10, 14, 1, 'Beklemede'),
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 10, 15, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 10, 10, 1, 'Beklemede'),
+('7df1f52c-7789-440d-95f1-2613d246f20b', 10, 11, 1, 'Beklemede'),
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 10, 12, 1, 'Beklemede'),
+('990263e9-9176-49d0-81ad-55fef5fb034b', 10, 11, 1, 'Beklemede'),
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 10, 11, 1, 'Beklemede'),
+
+-- Körfez (ID: 11) - 6 Kargo, Toplam 75kg
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 11, 11, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 11, 12, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 11, 13, 1, 'Beklemede'),
+('0c91fe37-78d2-45a7-a3d9-6fddeaf72f25', 11, 14, 1, 'Beklemede'),
+('101dc53d-c8e7-49aa-a33e-e335c29c28e7', 11, 12, 1, 'Beklemede'),
+('3024224d-406e-4d93-8c0c-baf4ffaa45f1', 11, 13, 1, 'Beklemede'),
+
+-- İzmit (ID: 12) - 14 Kargo, Toplam 160kg
+('30576761-e7e0-4abb-b90c-71315c144e71', 12, 10, 1, 'Beklemede'),
+('31825ba0-39cb-48ee-a09f-90f1ebb13832', 12, 11, 1, 'Beklemede'),
+('3836a16c-de90-4768-a7e7-ed04dfc61cb9', 12, 12, 1, 'Beklemede'),
+('5916dea9-48a8-42af-9a21-5cb837c38f0c', 12, 13, 1, 'Beklemede'),
+('66df6e05-c7bc-4bdb-8b64-fe54de1352fc', 12, 14, 1, 'Beklemede'),
+('7d2f6ede-7e82-4102-9ce6-9496e3d0f4a7', 12, 15, 1, 'Beklemede'),
+('7df1f52c-7789-440d-95f1-2613d246f20b', 12, 10, 1, 'Beklemede'),
+('90969110-7d4a-4218-b812-5e5e31cb30c0', 12, 11, 1, 'Beklemede'),
+('990263e9-9176-49d0-81ad-55fef5fb034b', 12, 12, 1, 'Beklemede'),
+('9a8d8242-d61c-48e1-9be6-890b0f76a926', 12, 13, 1, 'Beklemede'),
+('9b20a1d7-41ff-4fbd-a9d0-575cab0fdf33', 12, 14, 1, 'Beklemede'),
+('a913fc19-c1ad-4c9f-9a35-7749aed32138', 12, 11, 1, 'Beklemede'),
+('b1152573-86fd-486e-b549-747a204c8b47', 12, 11, 1, 'Beklemede'),
+('eb0d1557-031d-4be6-a044-0b70277c84a1', 12, 13, 1, 'Beklemede');

@@ -41,7 +41,7 @@ CREATE TABLE istasyonlar (
 );
 
 INSERT INTO istasyonlar (id, isim, lat, lon) VALUES
-  (0, 'KOU Lojistik Merkezi', 40.8198997, 29.9226879),
+  (0, 'Kocaeli Universitesi', 40.8198997, 29.9226879),
   (1, 'Basiskele', 40.7135, 29.9284),
   (2, 'Cayirova', 40.8338788, 29.3812750),
   (3, 'Darica', 40.7574953, 29.3840004),
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS gonderiler (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   senaryo_id INT REFERENCES senaryolar(id) ON DELETE CASCADE,
   alim_istasyon_id BIGINT REFERENCES istasyonlar(id),
-  teslim_istasyon_id BIGINT REFERENCES istasyonlar(id) DEFAULT 0, -- 0: KOU Lojistik Merkezi
+  teslim_istasyon_id BIGINT REFERENCES istasyonlar(id) DEFAULT 0, -- 0: Kocaeli Universitesi
   agirlik_kg NUMERIC NOT NULL CHECK (agirlik_kg > 0),
   hacim_desi NUMERIC NOT NULL CHECK (hacim_desi > 0),
   durum TEXT DEFAULT 'beklemede', -- beklemede, rotalandı, yolda, teslim edildi
@@ -196,3 +196,24 @@ USING (auth.uid() = gonderen_id);
 CREATE POLICY "Kullanıcılar kargo oluşturabilir" 
 ON kargolar FOR INSERT 
 WITH CHECK (auth.uid() = gonderen_id);
+
+ALTER TABLE public.users 
+ADD COLUMN first_name TEXT,
+ADD COLUMN last_name TEXT;
+
+ALTER TABLE kargolar 
+ADD COLUMN planlanan_tarih DATE;
+
+ALTER TABLE public.kargolar ADD COLUMN IF NOT EXISTS arac_id TEXT;
+
+CREATE TABLE IF NOT EXISTS public.rota_ozetleri (
+    id UUID DEFAULT extensions.uuid_generate_v4() PRIMARY KEY,
+    planlanan_tarih DATE NOT NULL,
+    arac_id TEXT NOT NULL,
+    arac_isim TEXT,
+    toplam_km FLOAT,
+    toplam_maliyet FLOAT,
+    cizim_koordinatlari JSONB, 
+    duraklar TEXT[], 
+    olusturma_tarihi TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

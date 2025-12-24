@@ -39,8 +39,6 @@ function Kargolarim({ userId }) {
           <table style={tableStyle}>
             <thead>
               <tr style={headerStyle}>
-                <th>ID</th>
-                <th>Alıcı</th>
                 <th>Varış Noktası</th>
                 <th>Ağırlık</th>
                 <th>Adet</th>
@@ -51,8 +49,6 @@ function Kargolarim({ userId }) {
             <tbody>
               {kargolar.map((kargo) => (
                 <tr key={kargo.id} style={rowStyle}>
-                  <td>#{kargo.id}</td>
-                  <td>{kargo.alici_isim}</td>
                   <td>{kargo.istasyonlar?.isim || "Belirlenmedi"}</td>
                   <td>{kargo.agirlik_kg} kg</td>
                   <td>{kargo.adet}</td>
