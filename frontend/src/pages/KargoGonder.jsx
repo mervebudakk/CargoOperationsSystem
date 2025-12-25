@@ -31,6 +31,7 @@ function KargoGonder({ userId }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          alici_isim: "Kocaeli Üniversitesi",
           cikis_istasyon_id: parseInt(form.cikis_istasyon_id),
           agirlik_kg: parseFloat(form.agirlik_kg),
           adet: parseInt(form.adet)

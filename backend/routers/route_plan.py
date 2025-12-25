@@ -13,7 +13,6 @@ from typing import List
 router = APIRouter()
 
 class CargoCreate(BaseModel):
-    alici_isim: str
     cikis_istasyon_id: int
     agirlik_kg: float
     adet: int
@@ -112,46 +111,21 @@ def rotayi_coz_endpoint(tarih: str = Query(...)):
     except Exception as e:
         print(f"HATA: {str(e)}")
         return {"hata": f"Bir iç hata oluştu: {str(e)}"}
-    try:
-        # 1. İstasyonları ve o senaryoya ait kargo yüklerini çek
-        veriler = istasyonlari_senaryo_ile_birlestir(senaryo_id)
-        
-        # 2. Araçları çek (Hata almamak için doğrudan supabase_service üzerinden gidelim)
-        araclar_resp = supabase.table("araclar").select("*").execute()
-        araclar = araclar_resp.data if (araclar_resp and araclar_resp.data) else []
-        
-        # Terminale yazdırarak kontrol edelim (Sadece debug için)
-        print(f"DEBUG: Çekilen Araç Sayısı: {len(araclar)}")
-
-        if not araclar:
-            return {"hata": "Veritabanında araç bulunamadı. Lütfen Araç Yönetimi ekranından araç ekleyin."}
-
-        # 3. Algoritmayı çalıştır
-        sonuc = rotayi_clark_wright_ile_hesapla(veriler, araclar)
-        return sonuc
-        
-    except Exception as e:
-        # Sistem çökmesin diye hatayı yakalayıp ekrana gönderiyoruz
-        print(f"HATA: {str(e)}")
-        return {"hata": f"Bir iç hata oluştu: {str(e)}"}
     
 
 @router.post("/send-cargo")
 def kargo_gonder(payload: CargoCreate, user_id: str = Query(...)):
-    """
-    Kullanıcının oluşturduğu kargoyu veritabanına kaydeder.
-    """
     try:
+        # Tablo yapına (id, gonderen_id, cikis_istasyon_id, agirlik_kg, adet, durum) uygun hale getirdik
         resp = supabase.table("kargolar").insert({
             "gonderen_id": user_id,
-            "alici_isim": payload.alici_isim,
             "cikis_istasyon_id": payload.cikis_istasyon_id,
             "agirlik_kg": payload.agirlik_kg,
             "adet": payload.adet,
-            "durum": "Beklemede"
+            "durum": "Beklemede" # Tablondaki durum alanına uygun
         }).execute()
         
-        return {"mesaj": "Kargo başarıyla oluşturuldu", "data": resp.data}
+        return {"mesaj": "Kargo başarıyla oluşturuldu..."}
     except Exception as e:
         return {"hata": str(e)}
 
