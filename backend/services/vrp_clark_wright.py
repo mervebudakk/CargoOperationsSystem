@@ -5,11 +5,30 @@ import networkx as nx
 import pickle
 import os
 
-# --- YAPILANDIRMA ---
+# --- Yapılandırma, Öncelik ve Önbellek ---
+CACHE_DIR = "cache"
+GRAPH_FILE = os.path.join(CACHE_DIR, "kocaeli_network.graphml")
+
+if not os.path.exists(CACHE_DIR):
+    os.makedirs(CACHE_DIR)
+
 KOCAELI_GRAPH = None
+
+def graki_yukle():
+    """Kocaeli yol ağını dosyadan yükler veya internetten indirip kaydeder."""
+    global KOCAELI_GRAPH
+    if os.path.exists(GRAPH_FILE):
+        print("INFO: Kocaeli Yol Ağı yerel dosyadan yükleniyor... (HIZLI)")
+        KOCAELI_GRAPH = ox.load_graphml(GRAPH_FILE)
+    else:
+        print("INFO: Kocaeli Yol Ağı internetten indiriliyor... (BU BİR KEZ SÜRER)")
+        KOCAELI_GRAPH = ox.graph_from_place("Kocaeli, Turkey", network_type="drive")
+        ox.save_graphml(KOCAELI_GRAPH, GRAPH_FILE)
+    print("INFO: Yol Ağı Hazır.")
+
+# Modül yüklendiğinde grafı başlat
 try:
-    KOCAELI_GRAPH = ox.graph_from_place("Kocaeli, Turkey", network_type="drive")
-    print("INFO: Kocaeli Yol Ağı Başarıyla Yüklendi.")
+    graki_yukle()
 except Exception as e:
     print(f"HATA: Kocaeli Yol Ağı yüklenemedi: {e}")
 
