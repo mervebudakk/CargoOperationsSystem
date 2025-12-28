@@ -1,69 +1,103 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient"; // Supabase client eklendi
 
 function Kargolarim({ userId }) {
   const [kargolar, setKargolar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:8000/my-cargos?user_id=${userId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setKargolar(data);
+    const fetchMyCargos = async () => {
+      if (!userId) return;
+      
+      setYukleniyor(true);
+      try {
+        // Backend şemanıza uygun olarak istasyon bilgilerini (isim) JOIN yaparak çekiyoruz
+        const { data, error } = await supabase
+          .from("kargolar")
+          .select(`
+            id,
+            agirlik_kg,
+            adet,
+            durum,
+            olusturma_tarihi,
+            istasyonlar!cikis_istasyon_id (isim)
+          `)
+          .eq("gonderen_id", userId)
+          .order("olusturma_tarihi", { ascending: false });
+
+        if (error) throw error;
+        setKargolar(data || []);
+      } catch (err) {
+        console.error("Kargolar çekilemedi:", err.message);
+      } finally {
         setYukleniyor(false);
-      })
-      .catch((err) => {
-        console.error("Kargolar çekilemedi:", err);
-        setYukleniyor(false);
-      });
+      }
+    };
+
+    fetchMyCargos();
   }, [userId]);
 
   const getDurumRenk = (durum) => {
     switch (durum) {
-      case "Beklemede": return "#ff9800"; // Turuncu
-      case "Yolda": return "#2196f3";     // Mavi
-      case "Teslim Edildi": return "#4caf50"; // Yeşil
+      case "Beklemede": return "#ff9800"; // Turuncu (Onay bekliyor)
+      case "Planlandı": return "#2196f3";   // Mavi (Rotaya dahil edildi)
+      case "Yola Çıktı": return "#9c27b0";  // Mor (Araç hareket halinde)
+      case "Teslim Edildi": return "#4caf50"; // Yeşil (İşlem tamam)
       default: return "#aaa";
     }
   };
 
   return (
     <div style={containerStyle}>
-      <h2 style={{ color: "#2196F3", marginBottom: "20px" }}>📦 Gönderdiğim Kargolar</h2>
+      <div style={headerContainerStyle}>
+        <h2 style={{ color: "#2196F3", margin: 0 }}>📦 Gönderdiğim Kargolar</h2>
+        <span style={countBadgeStyle}>{kargolar.length} Toplam Kayıt</span>
+      </div>
 
       {yukleniyor ? (
-        <p style={{ color: "white" }}>Yükleniyor...</p>
+        <div style={messageBoxStyle}>
+          <p style={{ color: "#888" }}>Kargo geçmişiniz yükleniyor...</p>
+        </div>
       ) : kargolar.length === 0 ? (
-        <p style={{ color: "#aaa" }}>Henüz bir kargo gönderimi yapmadınız.</p>
+        <div style={messageBoxStyle}>
+          <p style={{ color: "#aaa" }}>Henüz bir kargo gönderimi yapmadınız.</p>
+        </div>
       ) : (
         <div style={tableContainer}>
           <table style={tableStyle}>
             <thead>
               <tr style={headerStyle}>
-                <th>Varış Noktası</th>
-                <th>Ağırlık</th>
-                <th>Adet</th>
-                <th>Durum</th>
-                <th>Tarih</th>
+                <th style={thStyle}>Kalkış İlçesi</th>
+                <th style={thStyle}>Ağırlık</th>
+                <th style={thStyle}>Adet</th>
+                <th style={thStyle}>Durum</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Kayıt Tarihi</th>
               </tr>
             </thead>
             <tbody>
               {kargolar.map((kargo) => (
                 <tr key={kargo.id} style={rowStyle}>
-                  <td>{kargo.istasyonlar?.isim || "Belirlenmedi"}</td>
-                  <td>{kargo.agirlik_kg} kg</td>
-                  <td>{kargo.adet}</td>
-                  <td>
+                  <td style={tdStyle}>
+                    📍 {kargo.istasyonlar?.isim || "Belirlenmedi"}
+                  </td>
+                  <td style={tdStyle}>{kargo.agirlik_kg} kg</td>
+                  <td style={tdStyle}>{kargo.adet} Adet</td>
+                  <td style={tdStyle}>
                     <span style={{ 
-                      padding: "4px 8px", 
-                      borderRadius: "4px", 
-                      fontSize: "12px", 
-                      background: getDurumRenk(kargo.durum), 
-                      color: "white" 
+                      padding: "5px 12px", 
+                      borderRadius: "6px", 
+                      fontSize: "11px", 
+                      fontWeight: "bold",
+                      background: `${getDurumRenk(kargo.durum)}22`, // %15 saydam arka plan
+                      color: getDurumRenk(kargo.durum),
+                      border: `1px solid ${getDurumRenk(kargo.durum)}55`
                     }}>
-                      {kargo.durum}
+                      {kargo.durum.toUpperCase()}
                     </span>
                   </td>
-                  <td>{new Date(kargo.olusturma_tarihi).toLocaleDateString("tr-TR")}</td>
+                  <td style={{ ...tdStyle, textAlign: "right", color: "#888" }}>
+                    {new Date(kargo.olusturma_tarihi).toLocaleDateString("tr-TR")}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -74,13 +108,16 @@ function Kargolarim({ userId }) {
   );
 }
 
-// Stiller
-const containerStyle = { padding: "20px", background: "#121212", minHeight: "100vh" };
-const tableContainer = { overflowX: "auto", background: "#1e1e1e", borderRadius: "10px", padding: "10px" };
-const tableStyle = { width: "100%", borderCollapse: "collapse", color: "white", textAlign: "left" };
-const headerStyle = { borderBottom: "2px solid #333", color: "#2196F3" };
-const rowStyle = { borderBottom: "1px solid #2a2a2a" };
-
-// Tablo hücreleri için ek stil gerekirse inline verilebilir (th, td { padding: 12px })
+// Geliştirilmiş Tasarım Stilleri
+const containerStyle = { padding: "30px", background: "#0a0a0a", minHeight: "100vh" };
+const headerContainerStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" };
+const countBadgeStyle = { background: "#1a1a1a", color: "#666", padding: "5px 12px", borderRadius: "20px", fontSize: "0.8rem", border: "1px solid #333" };
+const tableContainer = { overflowX: "auto", background: "#141414", borderRadius: "12px", padding: "10px", border: "1px solid #222" };
+const tableStyle = { width: "100%", borderCollapse: "collapse", color: "#e0e0e0", textAlign: "left" };
+const headerStyle = { borderBottom: "1px solid #333" };
+const thStyle = { padding: "15px", color: "#2196F3", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "1px" };
+const tdStyle = { padding: "18px 15px", borderBottom: "1px solid #1a1a1a", fontSize: "0.95rem" };
+const rowStyle = { transition: "background 0.2s" };
+const messageBoxStyle = { textAlign: "center", padding: "100px 20px", background: "#141414", borderRadius: "12px", border: "2px dashed #222" };
 
 export default Kargolarim;

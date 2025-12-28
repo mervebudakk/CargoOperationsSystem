@@ -15,64 +15,88 @@ export default function Login({ onLogin }) {
 
   const handleSignIn = async () => {
     setMessage({ type: "", text: "" });
-    if (!email || !password) return showMsg("E-posta ve şifre girilmelidir");
+    if (!email || !password) return showMsg("Lütfen e-posta ve şifrenizi giriniz.");
 
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-
-    if (error) {
-      const errorMsg = error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı" : error.message;
-      return showMsg(errorMsg);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        const errorMsg = error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı" : error.message;
+        throw new Error(errorMsg);
+      }
+      
+      // Giriş başarılı, App.jsx'teki session state'ini güncelle
+      if (onLogin) onLogin(data.session);
+      
+    } catch (err) {
+      showMsg(err.message);
+    } finally {
+      setLoading(false);
     }
-    onLogin?.(data.session);
   };
 
   const handleSignUp = async () => {
     setMessage({ type: "", text: "" });
-    if (!firstName || !lastName) return showMsg("Ad ve soyad zorunludur");
-    if (password.length < 6) return showMsg("Şifre en az 6 karakter olmalıdır");
+    if (!firstName || !lastName || !email || !password) return showMsg("Tüm alanların doldurulması zorunludur.");
+    if (password.length < 6) return showMsg("Şifre güvenliğiniz için en az 6 karakter olmalıdır.");
 
     setLoading(true);
     
-    // 1. Adım: Supabase Auth'a Kayıt
-    const { data: authData, error: authError } = await supabase.auth.signUp({ 
-      email, 
-      password 
-    });
+    try {
+      // 1. Adım: Supabase Auth'a Kayıt
+      const { data: authData, error: authError } = await supabase.auth.signUp({ 
+        email, 
+        password 
+      });
 
-    if (authError) {
-      setLoading(false);
-      return showMsg(authError.message);
-    }
+      if (authError) throw authError;
 
-    // 2. Adım: Başarılıysa public.users tablosuna profil oluşturma
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from("users")
-        .insert([
-          {
-            id: authData.user.id, // Auth'tan gelen UUID
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            role_id: 2 // Varsayılan: Müşteri
-          }
-        ]);
+      // 2. Adım: public.users tablosuna profil kaydı (Backend Şeması ile Uyumlu)
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from("users")
+          .insert([
+            {
+              id: authData.user.id, // Auth UUID
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              email: email.toLowerCase().trim(),
+              role_id: 2 // Veritabanı şemanızdaki varsayılan 'Müşteri' rolü
+            }
+          ]);
 
-      if (profileError) {
-        console.error("Profil hatası:", profileError.message);
-        // Profil oluşamazsa auth kaydını geri almak zor olduğu için logluyoruz
+        if (profileError) throw profileError;
       }
-    }
 
+      showMsg("Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.", "success");
+      setView("login");
+      // Formu temizle
+      setPassword("");
+    } catch (err) {
+      showMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) return showMsg("Lütfen e-posta adresinizi giriniz.");
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
     setLoading(false);
-    showMsg("Kayıt başarılı! Giriş yapabilirsiniz.", "success");
-    setView("login");
+    if (error) showMsg(error.message);
+    else showMsg("Şifre sıfırlama bağlantısı gönderildi.", "success");
   };
 
   return (
     <div style={styles.container}>
+      <div style={logoSection}>
+        <span style={{ fontSize: "3rem" }}>🚚</span>
+        <h2 style={{ color: "#fff", margin: "10px 0" }}>Kargo Operasyon</h2>
+        <p style={{ color: "#666", fontSize: "0.85rem" }}>Lojistik Yönetim Sistemi v2.0</p>
+      </div>
+
       {view !== "forgot" ? (
         <div style={styles.tabHeader}>
           <div style={styles.tab(view === "login")} onClick={() => setView("login")}>GİRİŞ YAP</div>
@@ -85,34 +109,58 @@ export default function Login({ onLogin }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gap: 15, marginTop: 20 }}>
+      <div style={{ display: "grid", gap: 15, marginTop: 10 }}>
         {view === "signup" && (
-          <>
-            <input placeholder="Adınız" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={styles.input} />
-            <input placeholder="Soyadınız" value={lastName} onChange={(e) => setLastName(e.target.value)} style={styles.input} />
-          </>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <input placeholder="Ad" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={{...styles.input, flex: 1}} />
+            <input placeholder="Soyad" value={lastName} onChange={(e) => setLastName(e.target.value)} style={{...styles.input, flex: 1}} />
+          </div>
         )}
         
-        <input placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} />
+        <input 
+          placeholder="E-posta Adresi" 
+          type="email"
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          style={styles.input} 
+        />
         
         {view !== "forgot" && (
-          <input placeholder="Şifre" type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} />
+          <input 
+            placeholder="Şifre" 
+            type="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            style={styles.input} 
+          />
         )}
 
-        {message.text && <div style={styles.message(message.type)}>{message.text}</div>}
+        {message.text && (
+          <div style={styles.message(message.type)}>
+            {message.type === "success" ? "✅ " : "⚠️ "}{message.text}
+          </div>
+        )}
 
         <button 
-          onClick={view === "login" ? handleSignIn : (view === "signup" ? handleSignUp : () => {})} 
+          onClick={view === "login" ? handleSignIn : (view === "signup" ? handleSignUp : handleResetPassword)} 
           disabled={loading} 
-          style={styles.button}
+          style={{
+            ...styles.button,
+            background: loading ? "#222" : (message.type === "success" ? "#4caf50" : styles.button.background)
+          }}
         >
-          {loading ? "İşleniyor..." : (view === "login" ? "Giriş" : "Kaydol")}
+          {loading ? "İşleniyor..." : (view === "login" ? "Sisteme Giriş" : (view === "signup" ? "Hesap Oluştur" : "Sıfırlama Bağlantısı Gönder"))}
         </button>
 
         {view === "login" && (
-          <div onClick={() => setView("forgot")} style={styles.forgotText}>Şifremi Unuttum</div>
+          <div onClick={() => setView("forgot")} style={styles.forgotText}>Şifremi Unuttum?</div>
         )}
       </div>
     </div>
   );
 }
+
+const logoSection = {
+  textAlign: "center",
+  marginBottom: "30px"
+};
