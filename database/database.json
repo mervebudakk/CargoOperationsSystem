@@ -1,0 +1,842 @@
+[
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "kapasite_adet",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "aktif",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "kiralanabilir",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "kiralama_maliyeti",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "baslangic_istasyon_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "isim",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('araclar_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "km_basi_maliyet",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "araclar",
+    "column_name": "kapasite_kg",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "yol_koordinatlari",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('istasyon_mesafeleri_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "baslangic_istasyon_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "bitis_istasyon_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "mesafe_km",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "son_guncelleme",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyonlar",
+    "column_name": "lat",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyonlar",
+    "column_name": "aktif",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyonlar",
+    "column_name": "isim",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyonlar",
+    "column_name": "lon",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "istasyonlar",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "gonderen_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "cikis_istasyon_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "agirlik_kg",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "adet",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "durum",
+    "data_type": "USER-DEFINED",
+    "is_nullable": "YES",
+    "column_default": "'Beklemede'::kargo_durum"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "olusturma_tarihi",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "arac_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "planlanan_tarih",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "kargolar",
+    "column_name": "id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "problem_tipi",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('optimizasyon_sonuclari_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "senaryo_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "calisma_suresi_ms",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "toplam_maliyet",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "toplam_km",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "kullanilan_arac_sayisi",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "tasinan_kargo_sayisi",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "tasinan_kargo_kg",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "kabul_edilen_kargo_sayisi",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "reddedilen_kargo_sayisi",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "cozum_detaylari",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "olusturma_tarihi",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "algoritma_adi",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "roles",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "roles",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('roles_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "tahmini_varis_saati",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('rota_detaylari_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "mesafe_onceki_km",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "istasyon_id",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "sira",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "rota_oz_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "yuklu_kargo_kg",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "yuklu_kargo_sayisi",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_detaylari",
+    "column_name": "kalan_kapasite_kg",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "toplam_maliyet",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "planlanan_tarih",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "toplam_km",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "uuid_generate_v4()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "cizim_koordinatlari",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "olusturma_tarihi",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "duraklar",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "arac_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "rota_ozetleri",
+    "column_name": "arac_isim",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryo_yukleri",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('senaryo_yukleri_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryo_yukleri",
+    "column_name": "alim_istasyon_id",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryo_yukleri",
+    "column_name": "senaryo_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryo_yukleri",
+    "column_name": "agirlik_kg",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryo_yukleri",
+    "column_name": "adet",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryolar",
+    "column_name": "aciklama",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryolar",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryolar",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryolar",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('senaryolar_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "senaryolar",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_ayarlari",
+    "column_name": "guncellenme_tarihi",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "timezone('utc'::text, now())"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_ayarlari",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('sistem_ayarlari_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_ayarlari",
+    "column_name": "deger",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_ayarlari",
+    "column_name": "anahtar",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_ayarlari",
+    "column_name": "aciklama",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "eski_deger",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "islem_zamani",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "yeni_deger",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "kullanici_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "nextval('sistem_loglari_id_seq'::regclass)"
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "islem_tipi",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "tablo_adi",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "sistem_loglari",
+    "column_name": "kayit_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "users",
+    "column_name": "email",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "users",
+    "column_name": "first_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "users",
+    "column_name": "last_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "users",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "users",
+    "column_name": "role_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "type": "TABLE_STRUCTURE",
+    "table_name": "users",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "araclar",
+    "column_name": "baslangic_istasyon_id -> istasyonlar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "bitis_istasyon_id -> istasyonlar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "istasyon_mesafeleri",
+    "column_name": "baslangic_istasyon_id -> istasyonlar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "kargolar",
+    "column_name": "gonderen_id -> users(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "kargolar",
+    "column_name": "cikis_istasyon_id -> istasyonlar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "optimizasyon_sonuclari",
+    "column_name": "senaryo_id -> senaryolar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "rota_detaylari",
+    "column_name": "istasyon_id -> istasyonlar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "rota_detaylari",
+    "column_name": "rota_oz_id -> rota_ozetleri(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "senaryo_yukleri",
+    "column_name": "alim_istasyon_id -> istasyonlar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "senaryo_yukleri",
+    "column_name": "senaryo_id -> senaryolar(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "senaryolar",
+    "column_name": "created_by -> users(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "sistem_loglari",
+    "column_name": "kullanici_id -> users(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  },
+  {
+    "type": "RELATIONSHIP",
+    "table_name": "users",
+    "column_name": "role_id -> roles(id)",
+    "data_type": null,
+    "is_nullable": null,
+    "column_default": null
+  }
+]

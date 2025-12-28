@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabaseClient";
 import Login from "./pages/Login";
-import IstasyonEkleme from "./pages/IstasyonYonetimi";
+import IstasyonYonetimi from "./pages/IstasyonYonetimi";
 import AracYonetimi from "./pages/AracYonetimi";
 import SenaryoGirisi from "./pages/SenaryoGirisi";
 import KargoOnayMerkezi from "./pages/KargoOnayMerkezi";
@@ -11,14 +11,14 @@ import KargoGonder from "./pages/KargoGonder";
 import Kargolarim from "./pages/Kargolarim";
 import Ayarlar from "./pages/Ayarlar"; 
 import Profil from "./pages/Profil";   
-import { istasyonlariGetirService } from "./services/api";
+import AnaSayfa from "./pages/AnaSayfa";
+import RotaPlanlama from "./pages/RotaPlanlama"
 
 export default function App() {
   const [session, setSession] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [istasyonlar, setIstasyonlar] = useState([]);
   const [bekleyenSayisi, setBekleyenSayisi] = useState(0);
   const [view, setView] = useState(() => localStorage.getItem("current_view") || "dashboard");
 
@@ -27,21 +27,29 @@ export default function App() {
       setSession(session);
       if (session) {
         fetchUserRole(session.user.id);
-        loadDashboardData();
+        fetchGlobalStats();
       } else {
         setLoading(false);
       }
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) fetchUserRole(session.user.id);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
     localStorage.setItem("current_view", view);
   }, [view]);
 
-  const loadDashboardData = async () => {
-    const data = await istasyonlariGetirService();
-    setIstasyonlar(data);
-    const { count } = await supabase.from("kargolar").select("*", { count: 'exact', head: true }).eq("durum", "Beklemede");
+  const fetchGlobalStats = async () => {
+    const { count } = await supabase
+      .from("kargolar")
+      .select("*", { count: 'exact', head: true })
+      .eq("durum", "Beklemede");
     setBekleyenSayisi(count || 0);
   };
 
@@ -57,7 +65,7 @@ export default function App() {
     setSession(null);
   };
 
-  if (loading) return <div style={fullPageCenter}>Yükleniyor...</div>;
+  if (loading) return <div style={fullPageCenter}>Sistem Yükleniyor...</div>;
   if (!session) return <Login onLogin={setSession} />;
 
   return (
@@ -67,38 +75,38 @@ export default function App() {
       <nav style={navbarStyle}>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={menuBtnStyle}>☰</button>
-          <span style={{ fontWeight: "bold", color: "#4caf50", textTransform: "uppercase" }}>
-            {view === "dashboard" ? "🏠 ANA SAYFA" : view.replace("_", " ")}
+          <span style={{ fontWeight: "bold", color: "#4caf50", letterSpacing: "1px" }}>
+            {view.toUpperCase().replace("_", " ")}
           </span>
         </div>
       </nav>
 
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         
-        {/* SIDEBAR: CHATGPT STİLİ */}
+        {/* SIDEBAR */}
         <aside style={{
           width: sidebarOpen ? "260px" : "0",
-          transition: "0.4s",
+          transition: "0.4s ease",
           background: "#1e1e1e",
           borderRight: sidebarOpen ? "1px solid #333" : "none",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden"
         }}>
-          {/* ÜST: Menü Öğeleri */}
-          <div style={{ padding: "15px", flex: 1, overflowY: "auto" }}>
-            <h4 style={{ color: "#888", fontSize: "0.7rem", marginBottom: "15px", letterSpacing: "1px" }}>MENÜ</h4>
+          <div style={{ padding: "20px", flex: 1, overflowY: "auto" }}>
+            <h4 style={{ color: "#555", fontSize: "0.7rem", marginBottom: "20px", fontWeight: "bold" }}>NAVİGASYON</h4>
             
             <div style={navItem(view === "dashboard")} onClick={() => setView("dashboard")}>🏠 Ana Sayfa</div>
 
             {role === "admin" && (
               <>
+                <div style={navItem(view === "rota_planlama")} onClick={() => setView("rota_planlama")}>🗺️ Rota Planlama</div>
                 <div style={navItem(view === "istasyon_yonetimi")} onClick={() => setView("istasyon_yonetimi")}>🏗️ İstasyonlar</div>
                 <div style={navItem(view === "arac_yonetimi")} onClick={() => setView("arac_yonetimi")}>🚛 Araç Filosu</div>
                 <div style={navItem(view === "kargo_onay")} onClick={() => setView("kargo_onay")}>
                   📦 Onay Merkezi {bekleyenSayisi > 0 && <span style={badgeStyle}>{bekleyenSayisi}</span>}
                 </div>
-                <div style={navItem(view === "senaryo")} onClick={() => setView("senaryo")}>📋 Senaryo Yönetimi</div>
+                <div style={navItem(view === "senaryo")} onClick={() => setView("senaryo")}>📋 Senaryolar</div>
                 <div style={navItem(view === "kullanici_yonetimi")} onClick={() => setView("kullanici_yonetimi")}>👥 Kullanıcılar</div>
                 <div style={navItem(view === "raporlar")} onClick={() => setView("raporlar")}>📊 Raporlar</div>
                 <div style={navItem(view === "ayarlar")} onClick={() => setView("ayarlar")}>⚙️ Ayarlar</div>
@@ -113,38 +121,26 @@ export default function App() {
             )}
           </div>
 
-          {/* ALT: Çıkış ve Profil */}
+          {/* PROFİL VE ÇIKIŞ */}
           <div style={{ padding: "15px", borderTop: "1px solid #333", background: "#1a1a1a" }}>
-            <div style={{ ...navItem(false), color: "#ff5252", marginBottom: "8px" }} onClick={handleSignOut}>🚪 Çıkış Yap</div>
+            <div style={{ ...navItem(false), color: "#ff5252" }} onClick={handleSignOut}>🚪 Çıkış Yap</div>
             <div onClick={() => setView("profil")} style={profileCard(view === "profil")}>
               <div style={avatarStyle}>{session.user.email[0].toUpperCase()}</div>
               <div style={{ overflow: "hidden" }}>
                 <div style={{ fontSize: "0.85rem", fontWeight: "bold", whiteSpace: "nowrap" }}>{session.user.email.split("@")[0]}</div>
-                <div style={{ fontSize: "0.7rem", color: "#888" }}>{role}</div>
+                <div style={{ fontSize: "0.7rem", color: "#666" }}>{role?.toUpperCase()}</div>
               </div>
             </div>
           </div>
         </aside>
 
-        {/* ANA İÇERİK ALANI */}
-        <main style={{ flex: 1, overflowY: "auto", padding: "30px", background: "#121212" }}>
-          
-          {view === "dashboard" && (
-            <div style={{ textAlign: "center" }}>
-              <h2 style={{ color: "#4caf50" }}>Hoş Geldin! 👋</h2>
-              <div style={{ display: "flex", gap: "20px", justifyContent: "center", marginTop: "30px" }}>
-                 <div style={dashCard} onClick={() => setView(role === "admin" ? "kargo_onay" : "kargo_gonder")}>
-                    <h3>{role === "admin" ? "📦 Bekleyenler" : "🚀 Yeni Gönderi"}</h3>
-                    <p>{role === "admin" ? bekleyenSayisi : "+"}</p>
-                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Sayfalar artık dashboard'dan bağımsız çalışıyor */}
+        {/* ANA İÇERİK */}
+        <main style={{ flex: 1, overflowY: "auto", background: "#121212" }}>
+          {view === "dashboard" && <AnaSayfa userRole={role} />}
           {view === "profil" && <Profil session={session} />}
           {view === "ayarlar" && <Ayarlar />}
-          {view === "istasyon_yonetimi" && <IstasyonEkleme />}
+          {view === "rota_planlama" && <RotaPlanlama />}
+          {view === "istasyon_yonetimi" && <IstasyonYonetimi />}
           {view === "arac_yonetimi" && <AracYonetimi />}
           {view === "senaryo" && <SenaryoGirisi />}
           {view === "kargo_onay" && <KargoOnayMerkezi />}
@@ -162,14 +158,14 @@ export default function App() {
 const navbarStyle = { height: "60px", background: "#1a1a1a", borderBottom: "1px solid #333", display: "flex", alignItems: "center", padding: "0 20px" };
 const menuBtnStyle = { background: "none", border: "none", color: "white", fontSize: "20px", cursor: "pointer" };
 const navItem = (active) => ({
-  padding: "12px", borderRadius: "8px", cursor: "pointer", marginBottom: "4px", fontSize: "0.9rem",
-  background: active ? "#4caf5022" : "transparent", color: active ? "#4caf50" : "#ccc", display: "flex", justifyContent: "space-between"
+  padding: "14px", borderRadius: "10px", cursor: "pointer", marginBottom: "6px", fontSize: "0.95rem",
+  background: active ? "rgba(76, 175, 80, 0.15)" : "transparent", color: active ? "#4caf50" : "#aaa",
+  display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: active ? "bold" : "normal"
 });
 const profileCard = (active) => ({
-  display: "flex", alignItems: "center", gap: "10px", padding: "10px", borderRadius: "10px", cursor: "pointer",
-  background: active ? "#333" : "transparent", border: active ? "1px solid #4caf50" : "1px solid transparent"
+  display: "flex", alignItems: "center", gap: "12px", padding: "12px", borderRadius: "12px", cursor: "pointer", marginTop: "10px",
+  background: active ? "#252525" : "transparent", border: active ? "1px solid #4caf50" : "1px solid transparent"
 });
-const avatarStyle = { width: "32px", height: "32px", background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" };
-const badgeStyle = { background: "#ff4444", color: "white", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem" };
-const dashCard = { background: "#1e1e1e", padding: "20px", borderRadius: "15px", border: "1px solid #333", cursor: "pointer", minWidth: "200px" };
-const fullPageCenter = { height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#121212", color: "white" };
+const avatarStyle = { minWidth: "36px", height: "36px", background: "#4caf50", borderRadius: "50%", display: "flex", alignItems: "center", justifyCenter: "center", fontWeight: "bold" };
+const badgeStyle = { background: "#e74c3c", color: "white", padding: "2px 8px", borderRadius: "20px", fontSize: "0.65rem", fontWeight: "bold" };
+const fullPageCenter = { height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#121212", color: "white", fontSize: "1.2rem" };

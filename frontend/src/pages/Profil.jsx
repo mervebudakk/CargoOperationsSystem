@@ -3,18 +3,21 @@ import { supabase } from "../lib/supabaseClient";
 
 export default function Profil({ session }) {
   const [loading, setLoading] = useState(false);
+  const [mesaj, setMesaj] = useState({ tip: "", metin: "" });
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "", // Salt okunur gösterim için eklendi
     newPassword: ""
   });
 
-  // 1. Sayfa açıldığında mevcut isim ve soyisim bilgilerini getir
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!session?.user?.id) return;
+      
       const { data, error } = await supabase
         .from("users")
-        .select("first_name, last_name")
+        .select("first_name, last_name, email")
         .eq("id", session.user.id)
         .single();
 
@@ -22,7 +25,8 @@ export default function Profil({ session }) {
         setFormData(prev => ({
           ...prev,
           firstName: data.first_name || "",
-          lastName: data.last_name || ""
+          lastName: data.last_name || "",
+          email: data.email || session.user.email
         }));
       }
     };
@@ -31,8 +35,10 @@ export default function Profil({ session }) {
 
   const handleUpdate = async () => {
     setLoading(true);
+    setMesaj({ tip: "", metin: "" });
+    
     try {
-      // 2. İsim ve Soyisim Güncelleme (public.users tablosu)
+      // 1. İsim ve Soyisim Güncelleme (public.users tablosu)
       const { error: profileError } = await supabase
         .from("users")
         .update({
@@ -43,12 +49,10 @@ export default function Profil({ session }) {
 
       if (profileError) throw profileError;
 
-      // 3. Şifre Güncelleme (Eğer kutu doluysa)
-      if (formData.newPassword.length > 0) {
+      // 2. Şifre Güncelleme (Eğer alan doluysa)
+      if (formData.newPassword.trim() !== "") {
         if (formData.newPassword.length < 6) {
-          alert("Şifre en az 6 karakter olmalıdır!");
-          setLoading(false);
-          return;
+          throw new Error("Şifre en az 6 karakter olmalıdır.");
         }
         const { error: authError } = await supabase.auth.updateUser({
           password: formData.newPassword
@@ -56,75 +60,170 @@ export default function Profil({ session }) {
         if (authError) throw authError;
       }
 
-      alert("Profil başarıyla güncellendi! ✅");
+      setMesaj({ tip: "success", metin: "Profil başarıyla güncellendi. ✅" });
       setFormData(prev => ({ ...prev, newPassword: "" })); // Şifre alanını temizle
-    } catch (error) {
-      alert("Hata oluştu: " + error.message);
+    } catch (err) {
+      setMesaj({ tip: "error", metin: err.message || "Bir hata oluştu." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={containerStyle}>
-      <h2 style={{ color: "#4caf50", marginTop: 0, borderBottom: "1px solid #333", paddingBottom: "15px" }}>
-        👤 Profil Ayarlarım
-      </h2>
-      
-      <div style={{ display: "grid", gap: "20px", marginTop: "20px" }}>
-        <div>
-          <label style={labelStyle}>Adınız</label>
-          <input 
-            style={inpStyle} 
-            value={formData.firstName} 
-            onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
-          />
+    <div style={pageContainer}>
+      <div style={containerStyle}>
+        <div style={headerStyle}>
+          <div style={avatarCircle}>
+            {formData.firstName[0]?.toUpperCase()}{formData.lastName[0]?.toUpperCase()}
+          </div>
+          <h2 style={{ margin: "15px 0 5px 0", color: "#fff" }}>Hesap Ayarları</h2>
+          <p style={{ color: "#666", fontSize: "0.9rem" }}>Kişisel bilgilerinizi ve güvenliğinizi yönetin</p>
         </div>
 
-        <div>
-          <label style={labelStyle}>Soyadınız</label>
-          <input 
-            style={inpStyle} 
-            value={formData.lastName} 
-            onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
-          />
+        {mesaj.metin && (
+          <div style={mesajStyle(mesaj.tip)}>
+            {mesaj.metin}
+          </div>
+        )}
+
+        <div style={formGroup}>
+          <label style={labelStyle}>E-posta Adresi (Değiştirilemez)</label>
+          <input type="text" style={{ ...inpStyle, opacity: 0.6, cursor: "not-allowed" }} value={formData.email} readOnly />
         </div>
 
-        <hr style={{ borderColor: "#333", margin: "10px 0" }} />
+        <div style={{ display: "flex", gap: "15px" }}>
+          <div style={{ ...formGroup, flex: 1 }}>
+            <label style={labelStyle}>Ad</label>
+            <input 
+              type="text" 
+              style={inpStyle} 
+              value={formData.firstName} 
+              onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
+            />
+          </div>
+          <div style={{ ...formGroup, flex: 1 }}>
+            <label style={labelStyle}>Soyad</label>
+            <input 
+              type="text" 
+              style={inpStyle} 
+              value={formData.lastName} 
+              onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
+            />
+          </div>
+        </div>
 
-        <div>
-          <label style={labelStyle}>Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)</label>
+        <div style={{ margin: "20px 0", borderTop: "1px solid #333" }} />
+
+        <div style={formGroup}>
+          <label style={labelStyle}>Yeni Şifre</label>
           <input 
             type="password" 
             style={inpStyle} 
-            placeholder="••••••"
+            placeholder="Değiştirmek istemiyorsanız boş bırakın"
             value={formData.newPassword} 
             onChange={(e) => setFormData({...formData, newPassword: e.target.value})} 
           />
         </div>
 
         <button 
-          style={{ ...btnStyle, opacity: loading ? 0.6 : 1 }} 
+          style={{ 
+            ...btnStyle, 
+            background: loading ? "#222" : "#4caf50",
+            cursor: loading ? "not-allowed" : "pointer" 
+          }} 
           onClick={handleUpdate}
           disabled={loading}
         >
-          {loading ? "Güncelleniyor..." : "Değişiklikleri Kaydet"}
+          {loading ? "⌛ İşleniyor..." : "💾 Değişiklikleri Kaydet"}
         </button>
       </div>
     </div>
   );
 }
 
-// Projenle uyumlu stiller
-const containerStyle = {
-  maxWidth: "600px",
-  margin: "0 auto",
-  padding: "30px",
-  background: "#1a1a1a",
-  borderRadius: "12px",
-  border: "1px solid #333"
+// Geliştirilmiş Stiller
+const pageContainer = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  minHeight: "calc(100vh - 100px)",
+  padding: "20px"
 };
 
-const labelStyle = { display: "block", marginBottom: "8px", fontSize: "0.85rem", color: "#888" };
-const inpStyle = { padding: "12px", background: "#111", border: "1px solid #333", color: "white", borderRadius: "8px", width: "100%", boxSizing: "border-box" };
-const btnStyle = { padding: "14px", background: "#4caf50", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "1rem" };
+const containerStyle = {
+  width: "100%",
+  maxWidth: "500px",
+  background: "#141414",
+  padding: "40px",
+  borderRadius: "16px",
+  border: "1px solid #222",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+};
+
+const headerStyle = {
+  textAlign: "center",
+  marginBottom: "30px"
+};
+
+const avatarCircle = {
+  width: "70px",
+  height: "70px",
+  borderRadius: "50%",
+  background: "linear-gradient(45deg, #4caf50, #2e7d32)",
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "1.5rem",
+  fontWeight: "bold",
+  margin: "0 auto"
+};
+
+const formGroup = {
+  marginBottom: "20px"
+};
+
+const labelStyle = { 
+  display: "block", 
+  marginBottom: "8px", 
+  fontSize: "0.8rem", 
+  color: "#888",
+  fontWeight: "600",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px"
+};
+
+const inpStyle = { 
+  padding: "12px 15px", 
+  background: "#0a0a0a", 
+  border: "1px solid #333", 
+  color: "white", 
+  borderRadius: "8px", 
+  width: "100%", 
+  boxSizing: "border-box",
+  outline: "none",
+  transition: "border-color 0.2s"
+};
+
+const btnStyle = { 
+  width: "100%", 
+  padding: "14px", 
+  color: "white", 
+  border: "none", 
+  borderRadius: "8px", 
+  fontWeight: "bold", 
+  fontSize: "1rem",
+  marginTop: "10px",
+  transition: "0.3s"
+};
+
+const mesajStyle = (tip) => ({
+  padding: "12px",
+  borderRadius: "8px",
+  marginBottom: "20px",
+  fontSize: "0.9rem",
+  textAlign: "center",
+  background: tip === "success" ? "rgba(76, 175, 80, 0.1)" : "rgba(244, 67, 54, 0.1)",
+  color: tip === "success" ? "#4caf50" : "#f44336",
+  border: `1px solid ${tip === "success" ? "#4caf5044" : "#f4433644"}`
+});
