@@ -62,9 +62,8 @@ def rota_cizim_koordinatlarini_bul(nokta1, nokta2):
     except:
         return [[nokta1["lat"], nokta1["lon"]], [nokta2["lat"], nokta2["lon"]]]
 
-
 # 2. Clark-Wright Savings Algoritması
-def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict]):
+def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict], yakit_maliyeti: float = 1.0, kiralama_bedeli: float = 200.0):
     depo = next((i for i in istasyonlar if i["isim"] == "Kocaeli Universitesi"), None)
     if not depo:
         return {"hata": "Varış noktası (Kocaeli Universitesi) bulunamadı."}
@@ -78,7 +77,6 @@ def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict]
         for m in musteriler:
             m["node_id"] = ox.nearest_nodes(KOCAELI_GRAPH, m["lon"], m["lat"])
 
-    # --- 1. Tasarruf Hesaplama ve Birleştirme ---
     tasarruflar = []
     for i in range(len(musteriler)):
         for j in range(i + 1, len(musteriler)):
@@ -103,14 +101,12 @@ def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict]
                 else: continue
                 rotalar.remove(r1); rotalar.remove(r2); rotalar.append(new_route)
 
-    # --- 3. DÜZELTİLMİŞ ARAÇ ATAMA VE ZİNCİRLEME OPTİMİZASYONU ---
     final_rotalar = []
     mevcut_ozmal_araclar = sorted([a for a in araclar if not a.get("kiralanabilir", False)], key=lambda x: x['kapasite_kg'], reverse=True)
     kullanilan_arac_ids = set()
     kiralik_sayaci = 1
 
     for ham_rota_duraklari in rotalar:
-        # ZİKZAK ÖNLEME: En uzak noktadan başlayıp her adımda en yakın komşuya giden zincir kur
         en_uzak = max(ham_rota_duraklari, key=lambda x: mesafe_hesapla(depo, x))
         sirali_duraklar = [en_uzak]
         kalanlar = [d for d in ham_rota_duraklari if d != en_uzak]
@@ -129,16 +125,12 @@ def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict]
         # SEÇENEK A: ÖZMAL ARAÇLAR
         for arac in mevcut_ozmal_araclar:
             if arac["id"] not in kullanilan_arac_ids and rota_yuku <= arac["kapasite_kg"]:
-                # Başlangıç istasyonu optimizasyonu
                 baslangic_ist = next((ist for ist in istasyonlar if ist["id"] == arac.get("baslangic_istasyon_id")), rota_duraklari[0])
-                
-                if baslangic_ist == rota_duraklari[0]:
-                    yol = rota_duraklari + [depo]
-                else:
-                    yol = [baslangic_ist] + rota_duraklari + [depo]
+                yol = ([baslangic_ist] if baslangic_ist != rota_duraklari[0] else []) + rota_duraklari + [depo]
                 
                 km = sum(mesafe_hesapla(yol[k], yol[k+1]) for k in range(len(yol)-1))
-                maliyet = arac.get("kiralama_maliyeti", 0) + (km * arac.get("km_basi_maliyet", 1.5))
+                # Buradaki 1.5 çarpanı yerine veritabanından gelen yakit_maliyeti kullanıldı
+                maliyet = arac.get("kiralama_maliyeti", 0) + (km * yakit_maliyeti)
                 
                 if maliyet < min_maliyet:
                     min_maliyet = maliyet
@@ -148,7 +140,8 @@ def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict]
         if rota_yuku <= KIRALIK_ARAC_KAPASITE:
             yol_kiralik = rota_duraklari + [depo]
             km_kiralik = sum(mesafe_hesapla(yol_kiralik[k], yol_kiralik[k+1]) for k in range(len(yol_kiralik)-1))
-            maliyet_kiralik = KIRALIK_ARAC_MALIYET + (km_kiralik * 1.2)
+            # Sabit 200 ve 1.2 yerine parametreler kullanıldı
+            maliyet_kiralik = kiralama_bedeli + (km_kiralik * yakit_maliyeti)
             
             if maliyet_kiralik < min_maliyet:
                 min_maliyet = maliyet_kiralik
@@ -180,6 +173,6 @@ def rotayi_clark_wright_ile_hesapla(istasyonlar: List[Dict], araclar: List[Dict]
     return {
         "durum": "Başarılı",
         "arac_rotalari": final_rotalar,
-        "toplam_maliyet": sum(r["maliyet"] for r in final_rotalar),
-        "toplam_km": sum(r["toplam_km"] for r in final_rotalar)
+        "toplam_maliyet": round(sum(r["maliyet"] for r in final_rotalar), 2),
+        "toplam_km": round(sum(r["toplam_km"] for r in final_rotalar), 2)
     }
