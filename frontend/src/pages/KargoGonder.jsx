@@ -10,10 +10,9 @@ function KargoGonder({ userId }) {
     adet: 1
   });
   const [mesaj, setMesaj] = useState("");
-  const [mesajTipi, setMesajTipi] = useState(""); // "success", "error", "loading"
+  const [mesajTipi, setMesajTipi] = useState(""); 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. İstasyonları yükle (Supabase üzerinden doğrudan çekiyoruz)
   useEffect(() => {
     const fetchIstasyonlar = async () => {
       const { data, error } = await supabase
@@ -29,7 +28,6 @@ function KargoGonder({ userId }) {
     fetchIstasyonlar();
   }, []);
 
-  // 2. Kargo Gönderme İşlemi
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -37,16 +35,14 @@ function KargoGonder({ userId }) {
     setMesajTipi("loading");
 
     try {
-      // Backend şemanıza uygun veri hazırlığı
       const kargoPayload = {
         gonderen_id: userId,
         cikis_istasyon_id: parseInt(form.cikis_istasyon_id),
         agirlik_kg: parseFloat(form.agirlik_kg),
         adet: parseInt(form.adet),
-        durum: 'Beklemede' // Default durum
+        durum: 'Beklemede'
       };
 
-      // Backend'deki FastAPI endpoint'ine istek (Veya doğrudan Supabase'e yazma)
       const { data, error } = await supabase
         .from("kargolar")
         .insert([kargoPayload])
@@ -117,7 +113,6 @@ function KargoGonder({ userId }) {
             >
               <option value="">İlçe Seçiniz...</option>
               {istasyonlar
-                // KOÜ bir varış noktası olduğu için kalkış listesinden çıkarıyoruz
                 .filter(ist => !ist.isim.toLowerCase().includes("universite")) 
                 .map(ist => (
                   <option key={ist.id} value={ist.id}>

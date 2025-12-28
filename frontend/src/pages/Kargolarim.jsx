@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabaseClient"; // Supabase client eklendi
+import { supabase } from "../lib/supabaseClient"; 
 
 function Kargolarim({ userId }) {
   const [kargolar, setKargolar] = useState([]);
@@ -11,7 +11,6 @@ function Kargolarim({ userId }) {
       
       setYukleniyor(true);
       try {
-        // Backend şemanıza uygun olarak istasyon bilgilerini (isim) JOIN yaparak çekiyoruz
         const { data, error } = await supabase
           .from("kargolar")
           .select(`
@@ -39,10 +38,10 @@ function Kargolarim({ userId }) {
 
   const getDurumRenk = (durum) => {
     switch (durum) {
-      case "Beklemede": return "#ff9800"; // Turuncu (Onay bekliyor)
-      case "Planlandı": return "#2196f3";   // Mavi (Rotaya dahil edildi)
-      case "Yola Çıktı": return "#9c27b0";  // Mor (Araç hareket halinde)
-      case "Teslim Edildi": return "#4caf50"; // Yeşil (İşlem tamam)
+      case "Beklemede": return "#ff9800"; 
+      case "Planlandı": return "#2196f3";   
+      case "Yola Çıktı": return "#9c27b0";  
+      case "Teslim Edildi": return "#4caf50"; 
       default: return "#aaa";
     }
   };
@@ -88,7 +87,7 @@ function Kargolarim({ userId }) {
                       borderRadius: "6px", 
                       fontSize: "11px", 
                       fontWeight: "bold",
-                      background: `${getDurumRenk(kargo.durum)}22`, // %15 saydam arka plan
+                      background: `${getDurumRenk(kargo.durum)}22`, 
                       color: getDurumRenk(kargo.durum),
                       border: `1px solid ${getDurumRenk(kargo.durum)}55`
                     }}>
@@ -108,7 +107,6 @@ function Kargolarim({ userId }) {
   );
 }
 
-// Geliştirilmiş Tasarım Stilleri
 const containerStyle = { padding: "30px", background: "#0a0a0a", minHeight: "100vh" };
 const headerContainerStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" };
 const countBadgeStyle = { background: "#1a1a1a", color: "#666", padding: "5px 12px", borderRadius: "20px", fontSize: "0.8rem", border: "1px solid #333" };

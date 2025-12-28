@@ -13,7 +13,6 @@ function KullaniciYonetimi() {
   const kullanicilariGetir = async () => {
     setLoading(true);
     try {
-      // Backend şemanızdaki users ve roles tablosu ilişkisini kullanıyoruz
       const { data, error } = await supabase
         .from("users")
         .select(`
@@ -27,7 +26,6 @@ function KullaniciYonetimi() {
 
       if (error) throw error;
 
-      // Önce Adminleri üste al, sonra Ad-Soyad ile alfabetik sırala
       const siraliData = data.sort((a, b) => {
         const roleA = a.roles?.name?.toLowerCase() || "";
         const roleB = b.roles?.name?.toLowerCase() || "";
@@ -48,7 +46,6 @@ function KullaniciYonetimi() {
     }
   };
 
-  // Arama filtresi: Hem e-posta hem de isim soyisimde arama yapar
   const filtrelenmişKullanicilar = kullanicilar.filter((user) => {
     const tamAd = `${user.first_name} ${user.last_name}`.toLowerCase();
     const email = user.email.toLowerCase();
@@ -68,7 +65,6 @@ function KullaniciYonetimi() {
         </div>
       </div>
 
-      {/* Arama Çubuğu */}
       <div style={{ marginBottom: "25px", position: "relative" }}>
         <input
           type="text"
@@ -129,7 +125,6 @@ function KullaniciYonetimi() {
   );
 }
 
-// Stiller ve Tasarım İyileştirmeleri
 const searchInputStyle = {
   width: "100%",
   padding: "14px 20px",

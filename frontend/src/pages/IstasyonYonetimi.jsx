@@ -8,7 +8,6 @@ export default function IstasyonYonetimi() {
   
   const [yeniIstasyon, setYeniIstasyon] = useState(() => {
     const saved = localStorage.getItem("temp_station");
-    // ID alanını state içinde tutmuyoruz, DB otomatik atayacak (bigint)
     return saved ? JSON.parse(saved) : { isim: '', lat: '', lon: '', aktif: true };
   });
 
@@ -24,7 +23,6 @@ export default function IstasyonYonetimi() {
 
   const fetchIstasyonlar = async () => {
     setLoading(true);
-    // Backend'deki istasyonlar tablosundan tüm alanları çekiyoruz
     const { data, error } = await supabase
       .from("istasyonlar")
       .select("*")
@@ -40,7 +38,6 @@ export default function IstasyonYonetimi() {
       return alert("Lütfen tüm alanları doldurun!");
     }
 
-    // Backend validasyonuna uygun veri dönüşümü
     const payload = {
       isim: yeniIstasyon.isim.trim(),
       lat: parseFloat(yeniIstasyon.lat),
@@ -48,13 +45,11 @@ export default function IstasyonYonetimi() {
       aktif: yeniIstasyon.aktif ?? true
     };
 
-    // Kocaeli sınırları kontrolü (Backend'deki algorithm_service validasyonu ile uyumlu)
     if (payload.lat < 40.0 || payload.lat > 41.5 || payload.lon < 29.0 || payload.lon > 31.0) {
       if (!window.confirm("Girdiğiniz koordinatlar Kocaeli sınırları dışında görünüyor. Yine de devam etmek istiyor musunuz?")) return;
     }
 
     if (editId) {
-      // GÜNCELLEME (UPDATE)
       const { error } = await supabase
         .from("istasyonlar")
         .update(payload)
@@ -69,8 +64,6 @@ export default function IstasyonYonetimi() {
         alert("Güncelleme hatası: " + error.message);
       }
     } else {
-      // YENİ EKLEME (INSERT)
-      // ÖNEMLİ: ID atamasını Supabase (PostgreSQL) otomatik yapmalı, elle random sayı vermiyoruz
       const { error } = await supabase
         .from("istasyonlar")
         .insert([payload]);
@@ -110,7 +103,6 @@ export default function IstasyonYonetimi() {
   return (
     <div style={{ display: "flex", height: "calc(100vh - 100px)", gap: "20px", padding: "20px", background: "#0a0a0a" }}>
       
-      {/* SOL TARAF: İstasyon Listesi */}
       <div style={panelContainerStyle}>
         <div style={panelHeaderStyle}>
           <h3 style={{ margin: 0, color: "#4caf50" }}>📋 İstasyon Yönetimi</h3>
@@ -150,7 +142,6 @@ export default function IstasyonYonetimi() {
         </div>
       </div>
 
-      {/* SAĞ TARAF: Form Alanı */}
       <div style={formContainerStyle}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid #333", paddingBottom: "15px", color: editId ? "#ff9800" : "#4caf50" }}>
           {editId ? "⚙️ İstasyonu Düzenle" : "➕ Yeni İstasyon"}

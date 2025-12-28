@@ -6,7 +6,6 @@ from models.cargo_model import CargoCreate, ScenarioCreate, KargoDurum
 class CargoController:
     @staticmethod
     def create_scenario(payload: ScenarioCreate):
-        """Yeni bir senaryo ve bu senaryoya ait yükleri DB'ye kaydeder."""
         try:
             senaryo = supabase_admin.table("senaryolar")\
                 .insert({"name": payload.name, "aciklama": payload.aciklama})\

@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { routeService } from "../services/api"; // Merkezi API servisi
+import { routeService } from "../services/api"; 
 
 export default function Ayarlar() {
   const [loading, setLoading] = useState(false);
   const [mesaj, setMesaj] = useState({ tip: "", metin: "" });
   
-  // Backend'deki 'sistem_ayarlari' tablosu anahtarlarıyla eşleşen state
   const [params, setParams] = useState({
     km_basi_maliyet: 1,
     kiralama_maliyeti_500kg: 200,
@@ -13,13 +12,11 @@ export default function Ayarlar() {
     kiralama_maliyeti_1000kg: 300
   });
 
-  // 1. Sayfa yüklendiğinde mevcut ayarları DB'den çek
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const response = await routeService.getSettings();
         if (response.basarili) {
-          // Gelen veriyi (anahtar:değer formatında) state'e maple
           setParams(prev => ({ ...prev, ...response.ayarlar }));
         }
       } catch (err) {
@@ -29,13 +26,12 @@ export default function Ayarlar() {
     fetchSettings();
   }, []);
 
-  // 2. Ayarları DB'ye kaydet
   const handleSave = async () => {
     setLoading(true);
     setMesaj({ tip: "", metin: "" });
     
     try {
-      // routeService.updateSettings, backend'deki PUT /api/routes/settings endpointini çağırır
+      
       const response = await routeService.updateSettings(params);
       
       if (response.basarili) {
@@ -63,7 +59,6 @@ export default function Ayarlar() {
         )}
         
         <div style={{ display: "grid", gap: "25px" }}>
-          {/* KM Başına Maliyet Ayarı */}
           <div style={inputGroupStyle}>
             <label style={labelStyle}>KM Başına Yakıt Maliyeti (₺)</label>
             <p style={helperTextStyle}>Araçların katettiği her kilometre için hesaplanacak birim maliyet.</p>
@@ -77,7 +72,6 @@ export default function Ayarlar() {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-            {/* Araç Kiralama Maliyetleri (Farklı Kapasiteler İçin) */}
             <div style={inputGroupStyle}>
               <label style={labelStyle}>500kg Kiralama Bedeli</label>
               <input 
@@ -112,7 +106,6 @@ export default function Ayarlar() {
   );
 }
 
-// Stiller (Dark Mode & Professional UI)
 const sectionStyle = { 
   background: "#141414", 
   padding: "30px", 

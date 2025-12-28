@@ -7,7 +7,7 @@ export default function Profil({ session }) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "", // Salt okunur gösterim için eklendi
+    email: "", 
     newPassword: ""
   });
 
@@ -38,7 +38,6 @@ export default function Profil({ session }) {
     setMesaj({ tip: "", metin: "" });
     
     try {
-      // 1. İsim ve Soyisim Güncelleme (public.users tablosu)
       const { error: profileError } = await supabase
         .from("users")
         .update({
@@ -49,7 +48,6 @@ export default function Profil({ session }) {
 
       if (profileError) throw profileError;
 
-      // 2. Şifre Güncelleme (Eğer alan doluysa)
       if (formData.newPassword.trim() !== "") {
         if (formData.newPassword.length < 6) {
           throw new Error("Şifre en az 6 karakter olmalıdır.");
@@ -61,7 +59,7 @@ export default function Profil({ session }) {
       }
 
       setMesaj({ tip: "success", metin: "Profil başarıyla güncellendi. ✅" });
-      setFormData(prev => ({ ...prev, newPassword: "" })); // Şifre alanını temizle
+      setFormData(prev => ({ ...prev, newPassword: "" })); 
     } catch (err) {
       setMesaj({ tip: "error", metin: err.message || "Bir hata oluştu." });
     } finally {
@@ -141,7 +139,6 @@ export default function Profil({ session }) {
   );
 }
 
-// Geliştirilmiş Stiller
 const pageContainer = {
   display: "flex",
   justifyContent: "center",
