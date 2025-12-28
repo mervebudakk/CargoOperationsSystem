@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { styles } from "../styles/KargoOnayMerkezi.styles";
-import { routeService } from "../services/api"; // Yeni API servisi eklendi
+import { routeService } from "../services/api"; 
 
 export default function KargoOnayMerkezi() {
   const [kargolar, setKargolar] = useState([]);
@@ -11,9 +11,8 @@ export default function KargoOnayMerkezi() {
   );
   const [loading, setLoading] = useState(false);
   const [seciliKargolar, setSeciliKargolar] = useState(new Set());
-  const [operasyonModu, setOperasyonModu] = useState("sinirsiz_arac"); // Backend değerleriyle eşitledik
+  const [operasyonModu, setOperasyonModu] = useState("sinirsiz_arac"); 
 
-  // --- 1. OTOMATİK YOLA ÇIKIŞ KONTROLÜ ---
   const otomatikYolaCikar = async () => {
     const bugun = new Date().toISOString().split('T')[0];
     const suAn = new Date();
@@ -89,41 +88,22 @@ export default function KargoOnayMerkezi() {
     }
   };
 
-  // --- 2. GÜNCELLENMİŞ ROTA HESAPLAMA (FastAPI Entegrasyonu) ---
   const rotaHesapla = async (isReplan = false) => {
     if (!isReplan && seciliKargolar.size === 0)
       return alert("⚠️ Lütfen kargo seçin!");
 
     setLoading(true);
     try {
-      // Backend Pydantic modeline uygun veri hazırlama
       const planRequest = {
         tarih: seciliTarih,
-        problem_tipi: operasyonModu, // "sinirsiz_arac" veya "belirli_arac"
+        problem_tipi: operasyonModu, 
         kargo_ids: isReplan ? null : Array.from(seciliKargolar)
       };
-
-      // routeService üzerinden FastAPI çağrısı
       const result = await routeService.planRoute(planRequest);
       
       if (!result.basarili) throw new Error(result.mesaj || "Hesaplama hatası");
 
-      // Rota özetlerini Supabase'e kaydetme (Backend'den gelen yeni yapıya göre)
       for (const rota of result.rotalar) {
-        const { error: summaryError } = await supabase.from("rota_ozetleri").upsert([
-          {
-            planlanan_tarih: seciliTarih,
-            arac_id: rota.arac_id.toString(),
-            arac_isim: rota.arac_isim,
-            toplam_km: rota.toplam_km,
-            toplam_maliyet: rota.maliyet,
-            cizim_koordinatlari: rota.cizim_koordinatlari,
-            duraklar: rota.duraklar.map(d => d.istasyon_isim), // Eski yapı uyumu için isim listesi
-          },
-        ]);
-        if (summaryError) throw summaryError;
-
-        // Kargo durumlarını güncelleme
         const istasyonIsimleri = rota.duraklar.map(d => d.istasyon_isim);
         
         const { error: kargoError } = await supabase
@@ -164,7 +144,6 @@ export default function KargoOnayMerkezi() {
     }
   };
 
-  // Stats hesaplamaları
   const seciliToplamAgirlik = kargolar
     .filter((k) => seciliKargolar.has(k.id))
     .reduce((sum, k) => sum + k.agirlik_kg, 0);

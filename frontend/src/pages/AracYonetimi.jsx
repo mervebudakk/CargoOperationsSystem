@@ -10,11 +10,11 @@ export default function AracYonetimi() {
   const [form, setForm] = useState({
     isim: '',
     kapasite_kg: '',
-    km_basi_maliyet: '1.0', // Backend: double precision
-    kiralanabilir: false,   // Backend: boolean
-    kiralama_maliyeti: '0', // Backend: double precision
+    km_basi_maliyet: '1.0', 
+    kiralanabilir: false,   
+    kiralama_maliyeti: '0', 
     baslangic_istasyon_id: '',
-    aktif: true             // Backend: boolean (default true)
+    aktif: true             
   });
 
   useEffect(() => {
@@ -23,7 +23,6 @@ export default function AracYonetimi() {
 
   const fetchInitialData = async () => {
     setLoading(true);
-    // İlişkisel veri çekme: istasyonlar(isim) backend'deki Foreign Key üzerinden çalışır
     const { data: aData } = await supabase
       .from("araclar")
       .select("*, istasyonlar(isim)")
@@ -32,7 +31,7 @@ export default function AracYonetimi() {
     const { data: iData } = await supabase
       .from("istasyonlar")
       .select("id, isim")
-      .eq("aktif", true) // Sadece aktif istasyonları kalkış noktası yapabiliriz
+      .eq("aktif", true) 
       .order("isim");
     
     if (aData) setAraclar(aData);
@@ -45,7 +44,6 @@ export default function AracYonetimi() {
       return alert("Lütfen isim, kapasite ve başlangıç noktasını seçiniz!");
     }
 
-    // Backend veri tiplerine tam uyum için dönüşüm
     const payload = {
       isim: form.isim,
       kapasite_kg: parseInt(form.kapasite_kg),
@@ -101,7 +99,6 @@ export default function AracYonetimi() {
   return (
     <div style={{ display: "flex", height: "calc(100vh - 100px)", gap: "20px", padding: "20px", background: "#0a0a0a" }}>
       
-      {/* SOL TARAF: Araç Listesi */}
       <div style={panelContainerStyle}>
         <div style={panelHeaderStyle}>
           <h3 style={{ margin: 0, color: "#2196F3" }}>🚛 Araç Filosu Yönetimi</h3>
@@ -154,7 +151,6 @@ export default function AracYonetimi() {
         </div>
       </div>
 
-      {/* SAĞ TARAF: Form Alanı */}
       <div style={formContainerStyle}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid #333", paddingBottom: "15px", color: editId ? "#ff9800" : "#2196F3" }}>
           {editId ? "⚙️ Aracı Düzenle" : "➕ Yeni Araç Ekle"}
@@ -219,7 +215,6 @@ export default function AracYonetimi() {
   );
 }
 
-// Stiller ve Yeni Eklemeler
 const panelContainerStyle = { flex: 1, display: "flex", flexDirection: "column", background: "#1a1a1a", borderRadius: "12px", border: "1px solid #333", overflow: "hidden" };
 const panelHeaderStyle = { padding: "20px", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#111" };
 const formContainerStyle = { width: "380px", background: "#1a1a1a", padding: "25px", borderRadius: "12px", border: "1px solid #333", alignSelf: "flex-start" };

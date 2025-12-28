@@ -4,7 +4,6 @@ from routers import route_plan
 
 app = FastAPI()
 
-# --- GÜVENLİK VE BAĞLANTI AYARLARI ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"], 
@@ -13,7 +12,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- YÖNLENDİRİCİLERİ (ROUTERS) DAHİL ET ---
 app.include_router(route_plan.router)
 
 @app.get("/")

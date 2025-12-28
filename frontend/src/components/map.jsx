@@ -2,7 +2,6 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from '
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Durak numaralarını göstermek için özel ikon oluşturucu
 const createNumberIcon = (number, color) => {
   return L.divIcon({
     className: 'custom-number-icon',
@@ -22,7 +21,6 @@ const MapEvents = ({ onMapClick, role }) => {
 };
 
 const Harita = ({ istasyonlar, rota, merkezKonum, onMapClick, role }) => {
-  // Rotalar için renk paleti
   const colors = ["#2563eb", "#dc2626", "#16a34a", "#ca8a04", "#9333ea", "#0891b2"];
 
   return (
@@ -30,7 +28,6 @@ const Harita = ({ istasyonlar, rota, merkezKonum, onMapClick, role }) => {
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <MapEvents onMapClick={onMapClick} role={role} />
 
-      {/* 1. Tüm İstasyon İşaretçileri (Arka Plan) */}
       {istasyonlar && istasyonlar.map((ist) => (
         <Marker key={`ist-${ist.id}`} position={[ist.lat, ist.lon]} opacity={0.6}>
           <Popup>
@@ -42,14 +39,12 @@ const Harita = ({ istasyonlar, rota, merkezKonum, onMapClick, role }) => {
         </Marker>
       ))}
 
-      {/* 2. Rota ve Durak Görselleştirme */}
       {rota && rota.length > 0 && rota.map((aracRota, rIndex) => {
         const yolKoordinatlari = aracRota.cizim_koordinatlari || [];
         const rotaRengi = colors[rIndex % colors.length];
 
         return (
           <div key={`route-group-${rIndex}`}>
-            {/* Gerçek Yol Çizimi */}
             {yolKoordinatlari.length > 0 && (
               <Polyline 
                 positions={yolKoordinatlari} 
@@ -67,7 +62,6 @@ const Harita = ({ istasyonlar, rota, merkezKonum, onMapClick, role }) => {
               </Polyline>
             )}
 
-            {/* Rota Üzerindeki Durak Numaraları (Sıralı) */}
             {aracRota.duraklar && aracRota.duraklar.map((durak, dIndex) => (
               <Marker 
                 key={`stop-${rIndex}-${durak.istasyon_id}`}

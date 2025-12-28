@@ -18,13 +18,10 @@ from services.vrp_clark_wright import rotayi_optimize_et
 from models.cargo_model import KargoDurum
 from models.route_model import OptimizasyonSonucCreate, RotaDetayBase
 
-# Logger ayarla
 logger = logging.getLogger(__name__)
 
 
 class RouteController:
-    """Rota planlama ve optimizasyon işlemlerini yöneten controller"""
-    
     @staticmethod
     def solve_route(
         tarih: str, 
@@ -33,30 +30,9 @@ class RouteController:
         kullanici_id: Optional[str] = None,
         problem_tipi: str = "sinirsiz_arac"
     ) -> Dict:
-        """
-        Verilen tarih için rota planlaması yapar.
-        
-        İKİ MOD:
-        1. SENARYO MODU: senaryo_id verilirse, o senaryonun yüklerini kullanır
-        2. KARGO MODU: senaryo_id yoksa, bekleyen gerçek kargoları kullanır
-        
-        Args:
-            tarih: Planlama tarihi (YYYY-MM-DD)
-            kargo_ids: Planlanacak spesifik kargo ID'leri (opsiyonel)
-            senaryo_id: Senaryo ID'si - VARSA SENARYO MODU AKTIF
-            kullanici_id: İşlemi yapan kullanıcı ID
-            problem_tipi: "sinirsiz_arac" veya "belirli_arac"
-        
-        Returns:
-            Dict: Rota ve özet bilgileri
-        """
-        
         baslangic_zamani = time.time()
         
         try:
-            # ============================================
-            # 1. VALIDATION - Tarih Kontrolü
-            # ============================================
             if not tarih:
                 raise HTTPException(
                     status_code=400, 
@@ -71,15 +47,11 @@ class RouteController:
                     detail="Geçersiz tarih formatı. Beklenen: YYYY-MM-DD"
                 )
             
-            # Mod belirleme
             if senaryo_id:
                 logger.info(f"🎯 SENARYO MODU: Tarih={tarih}, Senaryo={senaryo_id}, Problem={problem_tipi}")
             else:
                 logger.info(f"📦 KARGO MODU: Tarih={tarih}, Problem={problem_tipi}")
             
-            # ============================================
-            # 2. ESKİ ROTALARI TEMİZLE (Sadece Kargo Modunda)
-            # ============================================
             if not senaryo_id:
                 eski_rotalar = supabase_admin.table("rota_ozetleri")\
                     .select("id")\
@@ -90,20 +62,16 @@ class RouteController:
                     r_ids = [r["id"] for r in eski_rotalar.data]
                     logger.info(f"{len(r_ids)} eski rota siliniyor...")
                     
-                    # Önce detayları sil
                     supabase_admin.table("rota_detaylari")\
                         .delete()\
                         .in_("rota_oz_id", r_ids)\
                         .execute()
                     
-                    # Sonra özetleri sil
                     supabase_admin.table("rota_ozetleri")\
                         .delete()\
                         .in_("id", r_ids)\
                         .execute()
-                    
-                    # Kargoları beklemede'ye al
-                    supabase_admin.table("kargolar")\
+                    kargo_reset = supabase_admin.table("kargolar")\
                         .update({
                             "durum": KargoDurum.BEKLEMEDE.value,
                             "arac_id": None,
@@ -112,13 +80,8 @@ class RouteController:
                         .eq("planlanan_tarih", tarih)\
                         .execute()
                     
-                    logger.info("Eski rotalar temizlendi")
+                    logger.info(f"Eski rotalar temizlendi - {len(kargo_reset.data) if kargo_reset.data else 0} kargo güncellendi")
             
-            # ============================================
-            # 3. VERİLERİ HAZIRLA
-            # ============================================
-            
-            # Sistem ayarlarını getir
             ayarlar = sistem_ayarlarini_getir()
             if not ayarlar:
                 raise HTTPException(
@@ -126,7 +89,6 @@ class RouteController:
                     detail="Sistem ayarları yüklenemedi"
                 )
             
-            # Araçları getir
             araclar = araclari_getir(sadece_aktif=True)
             if not araclar:
                 raise HTTPException(
@@ -136,7 +98,6 @@ class RouteController:
             
             logger.info(f"{len(araclar)} aktif araç bulundu")
             
-            # İstasyonları getir
             istasyonlar = istasyonlari_dbden_cek(sadece_aktif=True)
             if not istasyonlar:
                 raise HTTPException(
@@ -144,19 +105,12 @@ class RouteController:
                     detail="İstasyon bilgileri yüklenemedi"
                 )
             
-            # ============================================
-            # 4. YÜK HARİTASI OLUŞTUR
-            # MOD AYRIMI: Senaryo vs Kargo
-            # ============================================
             yuk_haritasi = {}
             toplam_kargo_kg = 0
             toplam_kargo_adet = 0
-            kargolar = []  # Kargo listesi (kargo modunda dolu olacak)
+            kargolar = [] 
             
             if senaryo_id:
-                # ============================================
-                # SENARYO MODU: Senaryo yüklerini kullan
-                # ============================================
                 logger.info(f"📋 Senaryo {senaryo_id} yükleri çekiliyor...")
                 
                 senaryo_yukleri = supabase_admin.table("senaryo_yukleri")\
@@ -170,10 +124,9 @@ class RouteController:
                         detail=f"Senaryo {senaryo_id} için yük bulunamadı"
                     )
                 
-                # Yük haritası oluştur
                 for yuk in senaryo_yukleri.data:
                     if yuk["agirlik_kg"] == 0 or yuk["adet"] == 0:
-                        continue  # Boş yükleri atla
+                        continue  
                     
                     ist_id = yuk["alim_istasyon_id"]
                     
@@ -181,7 +134,7 @@ class RouteController:
                         yuk_haritasi[ist_id] = {
                             "kg": 0,
                             "adet": 0,
-                            "ids": []  # Senaryo için ID yok
+                            "ids": []  
                         }
                     
                     yuk_haritasi[ist_id]["kg"] += yuk["agirlik_kg"]
@@ -197,17 +150,12 @@ class RouteController:
                 )
             
             else:
-                # ============================================
-                # KARGO MODU: Gerçek kargoları kullan
-                # ============================================
                 logger.info("📦 Gerçek kargolar çekiliyor...")
                 
                 if kargo_ids and len(kargo_ids) > 0:
-                    # Spesifik kargolar
                     tum_kargolar = kargo_listesi_getir(durum=KargoDurum.BEKLEMEDE.value)
                     kargolar = [k for k in tum_kargolar if k["id"] in kargo_ids]
                 else:
-                    # Tüm bekleyen kargolar
                     kargolar = kargo_listesi_getir(durum=KargoDurum.BEKLEMEDE.value)
                 
                 if not kargolar:
@@ -216,7 +164,6 @@ class RouteController:
                         detail="Planlanacak kargo bulunamadı"
                     )
                 
-                # Yük haritası oluştur
                 for k in kargolar:
                     ist_id = k["cikis_istasyon_id"]
                     
@@ -240,7 +187,6 @@ class RouteController:
                     f"{len(yuk_haritasi)} istasyon"
                 )
             
-            # İstasyonlara yük bilgisini ekle
             veriler = []
             for s in istasyonlar:
                 istasyon_data = {**s}
@@ -253,9 +199,6 @@ class RouteController:
                 
                 veriler.append(istasyon_data)
             
-            # ============================================
-            # 5. ALGORİTMA ÇALIŞTIR
-            # ============================================
             logger.info("Optimizasyon algoritması başlatılıyor...")
             
             algo_baslangic = time.time()
@@ -267,7 +210,6 @@ class RouteController:
             )
             algo_sure = (time.time() - algo_baslangic) * 1000
             
-            # YENİ: Return değeri kontrol et
             if isinstance(sonuc, dict) and "rotalar" in sonuc:
                 optimize_rotalar = sonuc["rotalar"]
                 algo_ozet = sonuc["ozet"]
@@ -280,7 +222,6 @@ class RouteController:
                     f"{int(algo_sure)} ms"
                 )
             else:
-                # Eski format
                 optimize_rotalar = sonuc
                 algo_ozet = {}
                 logger.warning("Eski format rota sonucu")
@@ -292,18 +233,15 @@ class RouteController:
                     detail="Rota optimizasyonu başarısız"
                 )
             
-            # ============================================
-            # 6. ROTALARI KAYDET (Sadece Kargo Modunda)
-            # ============================================
             toplam_km = 0
             toplam_maliyet = 0
             basarili_rota_sayisi = 0
             
             if not senaryo_id:
-                # Sadece kargo modunda veritabanına kaydet
-                for rota in optimize_rotalar:
+                logger.info(f"Veritabanına {len(optimize_rotalar)} rota kaydedilecek")
+                for idx, rota in enumerate(optimize_rotalar, 1):
                     try:
-                        # Rota özeti kaydet
+                        logger.info(f"Rota {idx}/{len(optimize_rotalar)} kaydediliyor: Araç {rota['arac_id']}")
                         rota_data = {
                             "planlanan_tarih": tarih,
                             "arac_id": str(rota["arac_id"]),
@@ -314,6 +252,29 @@ class RouteController:
                             "cizim_koordinatlari": rota.get("cizim_koordinatlari", [])
                         }
                         
+                        # Duplicate önleme: Aynı tarih ve araç için mevcut kayıt varsa sil
+                        logger.debug(f"Duplicate check: tarih={tarih}, arac_id={str(rota['arac_id'])}")
+                        dup_check = supabase_admin.table("rota_ozetleri")\
+                            .select("id")\
+                            .eq("planlanan_tarih", tarih)\
+                            .eq("arac_id", str(rota["arac_id"]))\
+                            .execute()
+                        
+                        logger.debug(f"Duplicate check sonucu: {len(dup_check.data) if dup_check.data else 0} kayıt bulundu")
+                        
+                        if dup_check.data:
+                            dup_ids = [d["id"] for d in dup_check.data]
+                            logger.warning(f"Duplicate rota bulundu: {dup_ids}. Siliniyor...")
+                            supabase_admin.table("rota_detaylari")\
+                                .delete()\
+                                .in_("rota_oz_id", dup_ids)\
+                                .execute()
+                            supabase_admin.table("rota_ozetleri")\
+                                .delete()\
+                                .in_("id", dup_ids)\
+                                .execute()
+                            logger.info(f"{len(dup_ids)} duplicate rota silindi")
+                        
                         rota_oz = supabase_admin.table("rota_ozetleri")\
                             .insert([rota_data])\
                             .execute()
@@ -321,7 +282,6 @@ class RouteController:
                         if rota_oz.data:
                             rota_oz_id = rota_oz.data[0]["id"]
                             
-                            # Rota detaylarını kaydet
                             detaylar = []
                             for d in rota.get("duraklar", []):
                                 detay = RotaDetayBase(
@@ -337,7 +297,6 @@ class RouteController:
                             if detaylar:
                                 rota_detaylarini_kaydet(detaylar, rota_oz_id)
                             
-                            # İlgili kargoların durumunu güncelle
                             istasyon_isimleri = [d["istasyon_isim"] for d in rota.get("duraklar", [])]
                             kargo_ids_guncelle = [
                                 k_id for ist_id in yuk_haritasi.keys()
@@ -363,15 +322,11 @@ class RouteController:
                         logger.error(f"Rota kaydedilemedi: {e}")
                         continue
             else:
-                # Senaryo modunda sadece toplamları hesapla
                 for rota in optimize_rotalar:
                     toplam_km += rota["toplam_km"]
                     toplam_maliyet += rota["maliyet"]
                     basarili_rota_sayisi += 1
             
-            # ============================================
-            # 7. OPTİMİZASYON SONUCUNU KAYDET
-            # ============================================
             if senaryo_id:
                 try:
                     tasinan_sayisi = algo_ozet.get("kabul_edilen_kargo_sayisi", len(yuk_haritasi))
@@ -416,9 +371,6 @@ class RouteController:
                 except Exception as e:
                     logger.warning(f"Optimizasyon sonucu kaydedilemedi: {e}")
             
-            # ============================================
-            # 8. SONUÇ DÖNDÜR
-            # ============================================
             toplam_sure = (time.time() - baslangic_zamani) * 1000
             
             sonuc = {
@@ -437,11 +389,10 @@ class RouteController:
                     "aktif_istasyon_sayisi": len(yuk_haritasi),
                     "calisma_suresi_ms": int(toplam_sure),
                     "algoritma_suresi_ms": int(algo_sure),
-                    "mod": "senaryo" if senaryo_id else "kargo"  # YENİ: Hangi mod kullanıldı
+                    "mod": "senaryo" if senaryo_id else "kargo"
                 }
             }
             
-            # Sistem logu kaydet
             if kullanici_id:
                 try:
                     sistem_logu_kaydet(

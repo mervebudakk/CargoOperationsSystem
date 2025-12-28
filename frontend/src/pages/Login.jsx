@@ -26,7 +26,6 @@ export default function Login({ onLogin }) {
         throw new Error(errorMsg);
       }
       
-      // Giriş başarılı, App.jsx'teki session state'ini güncelle
       if (onLogin) onLogin(data.session);
       
     } catch (err) {
@@ -44,7 +43,6 @@ export default function Login({ onLogin }) {
     setLoading(true);
     
     try {
-      // 1. Adım: Supabase Auth'a Kayıt
       const { data: authData, error: authError } = await supabase.auth.signUp({ 
         email, 
         password 
@@ -52,17 +50,16 @@ export default function Login({ onLogin }) {
 
       if (authError) throw authError;
 
-      // 2. Adım: public.users tablosuna profil kaydı (Backend Şeması ile Uyumlu)
       if (authData.user) {
         const { error: profileError } = await supabase
           .from("users")
           .insert([
             {
-              id: authData.user.id, // Auth UUID
+              id: authData.user.id, 
               first_name: firstName.trim(),
               last_name: lastName.trim(),
               email: email.toLowerCase().trim(),
-              role_id: 2 // Veritabanı şemanızdaki varsayılan 'Müşteri' rolü
+              role_id: 2 
             }
           ]);
 
@@ -71,7 +68,6 @@ export default function Login({ onLogin }) {
 
       showMsg("Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.", "success");
       setView("login");
-      // Formu temizle
       setPassword("");
     } catch (err) {
       showMsg(err.message);

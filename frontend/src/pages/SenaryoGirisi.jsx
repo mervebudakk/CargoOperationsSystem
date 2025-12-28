@@ -19,7 +19,6 @@ export default function SenaryoGirisi() {
   }, [seciliSenaryoId]);
 
   const fetchInitialData = async () => {
-    // Fetching scenarios and stations based on your schema (Table: senaryolar, istasyonlar)
     const { data: sData } = await supabase.from("senaryolar").select("*").order("id", { ascending: true });
     const { data: iData } = await supabase.from("istasyonlar").select("id, isim").order("isim");
     if (sData) setSenaryolar(sData);
@@ -58,12 +57,11 @@ export default function SenaryoGirisi() {
     const sId = parseInt(seciliSenaryoId);
     const iId = parseInt(yeniYuk.istasyon_id);
     const addCount = parseInt(yeniYuk.adet || 1);
-    const addWeight = parseInt(yeniYuk.agirlik); // Schema says agirlik_kg is 'integer' in senaryo_yukleri
+    const addWeight = parseInt(yeniYuk.agirlik);
 
     setLoading(true);
 
     try {
-      // 1. Check if station already exists in this scenario to prevent Duplicate Key (409)
       const { data: existing, error: fetchErr } = await supabase
         .from("senaryo_yukleri")
         .select("id, adet, agirlik_kg")
@@ -74,7 +72,6 @@ export default function SenaryoGirisi() {
       if (fetchErr) throw fetchErr;
 
       if (existing) {
-        // 2. UPDATE: Add values to existing record
         const { error: updateErr } = await supabase
           .from("senaryo_yukleri")
           .update({
@@ -84,12 +81,11 @@ export default function SenaryoGirisi() {
           .eq("id", existing.id);
         if (updateErr) throw updateErr;
       } else {
-        // 3. INSERT: Create new record using verified schema column names
         const { error: insertErr } = await supabase
           .from("senaryo_yukleri")
           .insert([{
             senaryo_id: sId,
-            alim_istasyon_id: iId, // Fixed column name per schema cache error
+            alim_istasyon_id: iId,
             adet: addCount,
             agirlik_kg: addWeight
           }]);
@@ -109,7 +105,6 @@ export default function SenaryoGirisi() {
 
   const handleYukSifirla = async (yukId) => {
   try {
-    // Veritabanında kaydı silmek yerine değerlerini 0 olarak güncelliyoruz [cite: 258, 263]
     const { error } = await supabase
       .from("senaryo_yukleri")
       .update({ 
@@ -120,7 +115,6 @@ export default function SenaryoGirisi() {
 
     if (error) throw error;
     
-    // Tabloyu güncel verilerle yenile
     fetchSenaryoYukleri(seciliSenaryoId);
   } catch (error) {
     console.error("Yük sıfırlanırken hata:", error.message);
@@ -128,13 +122,11 @@ export default function SenaryoGirisi() {
   }
 };
 
-  // Calculations based on your "Total weight" logic
   const totalWeight = yukler.reduce((acc, curr) => acc + (curr.agirlik_kg || 0), 0);
 
   return (
     <div style={{ display: "flex", height: "calc(100vh - 100px)", gap: "25px", padding: "20px", background: "#0a0a0a" }}>
       
-      {/* SIDEBAR: INPUT */}
       <div style={sidebarStyle}>
         <h3 style={{ color: "#4caf50", marginBottom: "20px" }}>🧪 Simülasyon Girişi</h3>
         
@@ -185,7 +177,6 @@ export default function SenaryoGirisi() {
         </div>
       </div>
 
-      {/* MAIN: LIST */}
       <div style={mainContentStyle}>
         <div style={headerActionStyle}>
           <div>
@@ -238,7 +229,6 @@ export default function SenaryoGirisi() {
   );
 }
 
-// STYLES
 const sidebarStyle = { width: "350px", background: "#141414", padding: "25px", borderRadius: "15px", border: "1px solid #222" };
 const mainContentStyle = { flex: 1, display: "flex", flexDirection: "column", background: "#141414", padding: "25px", borderRadius: "15px", border: "1px solid #222", overflow: "hidden" };
 const formGroup = { marginBottom: "15px" };

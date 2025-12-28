@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Supabase Veritabanı İşlemleri Servisi
-Tüm CRUD operasyonları burada merkezi olarak yönetilir.
-"""
-
 import os
 import logging
 from typing import List, Dict, Optional, Any
@@ -11,19 +5,14 @@ from datetime import datetime
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# Environment variables yükle
 load_dotenv()
-
-# Logger ayarla
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Supabase bağlantı bilgileri
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")  # Client-side key
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # Server-side key
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-# Bağlantı kontrolü
 if not SUPABASE_URL:
     logger.error("SUPABASE_URL environment variable'ı eksik!")
     raise ValueError("Supabase URL yapılandırması eksik")
@@ -33,12 +22,7 @@ if not SUPABASE_ANON_KEY and not SUPABASE_SERVICE_ROLE_KEY:
     raise ValueError("Supabase key yapılandırması eksik")
 
 
-# ============================================
-# CLIENT YÖNETIMI
-# ============================================
-
 def _client() -> Client:
-    """Normal kullanıcı yetkisiyle client döner"""
     try:
         key = SUPABASE_ANON_KEY or SUPABASE_SERVICE_ROLE_KEY
         if not key:
@@ -50,7 +34,6 @@ def _client() -> Client:
 
 
 def _admin_client() -> Client:
-    """Admin yetkisiyle client döner (RLS bypass)"""
     try:
         if not SUPABASE_SERVICE_ROLE_KEY:
             logger.warning("Service role key yok, normal client kullanılıyor")
@@ -61,24 +44,9 @@ def _admin_client() -> Client:
         raise
 
 
-# Global admin client (çoğu işlem için)
 supabase_admin = _admin_client()
 
-
-# ============================================
-# İSTASYON İŞLEMLERİ
-# ============================================
-
 def istasyonlari_dbden_cek(sadece_aktif: bool = True) -> List[Dict]:
-    """
-    Tüm istasyonları veritabanından çeker.
-    
-    Args:
-        sadece_aktif: Sadece aktif istasyonları getir
-    
-    Returns:
-        List[Dict]: İstasyon listesi
-    """
     try:
         query = supabase_admin.table("istasyonlar").select("*")
         
@@ -100,19 +68,7 @@ def istasyonlari_dbden_cek(sadece_aktif: bool = True) -> List[Dict]:
 
 
 def istasyon_ekle(isim: str, lat: float, lon: float) -> Dict:
-    """
-    Yeni istasyon ekler.
-    
-    Args:
-        isim: İstasyon adı
-        lat: Enlem
-        lon: Boylam
-    
-    Returns:
-        Dict: Eklenen istasyon bilgisi
-    """
     try:
-        # Validasyon
         if not isim or not isim.strip():
             raise ValueError("İstasyon ismi boş olamaz")
         
@@ -140,16 +96,6 @@ def istasyon_ekle(isim: str, lat: float, lon: float) -> Dict:
 
 
 def istasyon_guncelle(istasyon_id: int, **kwargs) -> Dict:
-    """
-    İstasyon bilgilerini günceller.
-    
-    Args:
-        istasyon_id: Güncellenecek istasyon ID
-        **kwargs: Güncellenecek alanlar (isim, lat, lon, aktif)
-    
-    Returns:
-        Dict: Güncellenmiş istasyon bilgisi
-    """
     try:
         if not kwargs:
             raise ValueError("Güncellenecek alan belirtilmedi")
@@ -169,43 +115,23 @@ def istasyon_guncelle(istasyon_id: int, **kwargs) -> Dict:
         logger.error(f"İstasyon güncelleme hatası: {e}", exc_info=True)
         raise
 
-
-# ============================================
-# MESAFE MATRİSİ İŞLEMLERİ
-# ============================================
-
 def mesafe_getir_ve_kaydet(
     baslangic_id: int, 
     bitis_id: int, 
     mesafe: Optional[float] = None, 
     koordinatlar: Optional[list] = None
 ) -> Optional[Dict]:
-    """
-    İki istasyon arası mesafeyi getirir veya kaydeder.
-    
-    Args:
-        baslangic_id: Başlangıç istasyon ID
-        bitis_id: Bitiş istasyon ID
-        mesafe: Kaydedilecek mesafe (km)
-        koordinatlar: Yol koordinatları (opsiyonel)
-    
-    Returns:
-        Dict veya None: Mesafe kaydı
-    """
     try:
-        # Önce veritabanını kontrol et
         check = supabase_admin.table("istasyon_mesafeleri")\
             .select("*")\
             .eq("baslangic_istasyon_id", baslangic_id)\
             .eq("bitis_istasyon_id", bitis_id)\
             .execute()
         
-        # Eğer kayıt varsa direkt dön
         if check.data and len(check.data) > 0:
             logger.debug(f"Mesafe DB'den bulundu: {baslangic_id} -> {bitis_id}")
             return check.data[0]
         
-        # Yoksa ve mesafe verilmişse kaydet
         if mesafe is not None:
             data = {
                 "baslangic_istasyon_id": baslangic_id,
@@ -234,20 +160,10 @@ def mesafe_getir_ve_kaydet(
 
 
 def toplu_mesafe_kaydet(mesafe_listesi: List[Dict]) -> int:
-    """
-    Birden fazla mesafeyi toplu olarak kaydeder.
-    
-    Args:
-        mesafe_listesi: [{"baslangic_id": int, "bitis_id": int, "mesafe": float}, ...]
-    
-    Returns:
-        int: Kaydedilen kayıt sayısı
-    """
     try:
         if not mesafe_listesi:
             return 0
         
-        # Formatlı veri hazırla
         kayitlar = []
         for item in mesafe_listesi:
             kayitlar.append({
@@ -271,17 +187,8 @@ def toplu_mesafe_kaydet(mesafe_listesi: List[Dict]) -> int:
         return 0
 
 
-# ============================================
-# SİSTEM AYARLARI İŞLEMLERİ
-# ============================================
 
 def sistem_ayarlarini_getir() -> Dict[str, float]:
-    """
-    Tüm sistem ayarlarını dictionary olarak getirir.
-    
-    Returns:
-        Dict: {anahtar: deger} formatında ayarlar
-    """
     try:
         response = supabase_admin.table("sistem_ayarlari")\
             .select("anahtar, deger")\
@@ -306,16 +213,6 @@ def sistem_ayarlarini_getir() -> Dict[str, float]:
 
 
 def sistem_ayari_guncelle(anahtar: str, deger: float) -> Dict:
-    """
-    Tek bir sistem ayarını günceller.
-    
-    Args:
-        anahtar: Ayar anahtarı
-        deger: Yeni değer
-    
-    Returns:
-        Dict: Güncellenmiş ayar
-    """
     try:
         response = supabase_admin.table("sistem_ayarlari")\
             .upsert({
@@ -336,21 +233,7 @@ def sistem_ayari_guncelle(anahtar: str, deger: float) -> Dict:
         raise
 
 
-# ============================================
-# ARAÇ İŞLEMLERİ
-# ============================================
-
 def araclari_getir(sadece_aktif: bool = True, sadece_ozmal: bool = False) -> List[Dict]:
-    """
-    Araç listesini getirir.
-    
-    Args:
-        sadece_aktif: Sadece aktif araçlar
-        sadece_ozmal: Sadece öz mal araçlar (kiralanabilir=False)
-    
-    Returns:
-        List[Dict]: Araç listesi
-    """
     try:
         query = supabase_admin.table("araclar").select("*")
         
@@ -370,26 +253,11 @@ def araclari_getir(sadece_aktif: bool = True, sadece_ozmal: bool = False) -> Lis
         return []
 
 
-# ============================================
-# KARGO İŞLEMLERİ
-# ============================================
-
 def kargo_listesi_getir(
     durum: Optional[str] = None,
     tarih: Optional[str] = None,
     kullanici_id: Optional[str] = None
 ) -> List[Dict]:
-    """
-    Kargo listesini filtreli getirir.
-    
-    Args:
-        durum: Kargo durumu filtresi
-        tarih: Planlanan tarih filtresi
-        kullanici_id: Kullanıcı ID filtresi
-    
-    Returns:
-        List[Dict]: Kargo listesi
-    """
     try:
         query = supabase_admin.table("kargolar")\
             .select("*, istasyonlar(isim, lat, lon)")
@@ -413,30 +281,14 @@ def kargo_listesi_getir(
         return []
 
 
-# ============================================
-# ROTA İŞLEMLERİ
-# ============================================
-
 def rota_detaylarini_kaydet(detaylar: List[Any], rota_ozet_id: str) -> bool:
-    """
-    Rota detaylarını toplu olarak kaydeder.
-    
-    Args:
-        detaylar: Rota detay model listesi
-        rota_ozet_id: Ana rota özet ID
-    
-    Returns:
-        bool: Başarılı ise True
-    """
     try:
         if not detaylar:
             logger.warning("Kaydedilecek rota detayı yok")
             return False
         
-        # Pydantic modellerini dict'e çevir
         kayitlar = []
         for detay in detaylar:
-            # Detayı dictionary'ye çevir
             if hasattr(detay, 'dict'):
                 kayit = detay.dict()
             elif isinstance(detay, dict):
@@ -462,15 +314,6 @@ def rota_detaylarini_kaydet(detaylar: List[Any], rota_ozet_id: str) -> bool:
 
 
 def rota_ozetlerini_getir(tarih: Optional[str] = None) -> List[Dict]:
-    """
-    Rota özetlerini getirir.
-    
-    Args:
-        tarih: Planlanan tarih filtresi
-    
-    Returns:
-        List[Dict]: Rota özet listesi
-    """
     try:
         query = supabase_admin.table("rota_ozetleri").select("*")
         
@@ -487,20 +330,7 @@ def rota_ozetlerini_getir(tarih: Optional[str] = None) -> List[Dict]:
         return []
 
 
-# ============================================
-# OPTİMİZASYON SONUÇLARI İŞLEMLERİ
-# ============================================
-
 def optimizasyon_sonucunu_kaydet(sonuc_data: Any) -> bool:
-    """
-    Optimizasyon sonucunu kaydeder.
-    
-    Args:
-        sonuc_data: OptimizasyonSonucCreate modeli veya dict
-    
-    Returns:
-        bool: Başarılı ise True
-    """
     try:
         kayit = sonuc_data.dict() if hasattr(sonuc_data, 'dict') else sonuc_data
         
@@ -518,20 +348,7 @@ def optimizasyon_sonucunu_kaydet(sonuc_data: Any) -> bool:
         return False
 
 
-# ============================================
-# SENARYO İŞLEMLERİ
-# ============================================
-
 def senaryo_yuklerini_cek(senaryo_id: int) -> List[Dict]:
-    """
-    Belirli bir senaryonun yük bilgilerini getirir.
-    
-    Args:
-        senaryo_id: Senaryo ID
-    
-    Returns:
-        List[Dict]: Senaryo yük listesi
-    """
     try:
         response = supabase_admin.table("senaryo_yukleri")\
             .select("*, istasyonlar(isim, lat, lon)")\
@@ -546,10 +363,6 @@ def senaryo_yuklerini_cek(senaryo_id: int) -> List[Dict]:
         return []
 
 
-# ============================================
-# SİSTEM LOGLARı
-# ============================================
-
 def sistem_logu_kaydet(
     kullanici_id: Optional[str],
     islem_tipi: str,
@@ -558,20 +371,6 @@ def sistem_logu_kaydet(
     eski_deger: Optional[Dict] = None,
     yeni_deger: Optional[Dict] = None
 ) -> bool:
-    """
-    Sistem işlemlerini loglar.
-    
-    Args:
-        kullanici_id: İşlemi yapan kullanıcı
-        islem_tipi: INSERT, UPDATE, DELETE
-        tablo_adi: Etkilenen tablo
-        kayit_id: Etkilenen kayıt ID
-        eski_deger: Eski değer (UPDATE/DELETE için)
-        yeni_deger: Yeni değer (INSERT/UPDATE için)
-    
-    Returns:
-        bool: Başarılı ise True
-    """
     try:
         log_data = {
             "kullanici_id": kullanici_id,
@@ -594,23 +393,16 @@ def sistem_logu_kaydet(
         return False
 
 
-# ============================================
-# TEST FONKSIYONU
-# ============================================
-
 if __name__ == "__main__":
     print("=== Supabase Bağlantı Testi ===")
     
     try:
-        # İstasyonları test et
         istasyonlar = istasyonlari_dbden_cek()
         print(f"✅ {len(istasyonlar)} istasyon bulundu")
         
-        # Sistem ayarlarını test et
         ayarlar = sistem_ayarlarini_getir()
         print(f"✅ {len(ayarlar)} sistem ayarı yüklendi")
         
-        # Araçları test et
         araclar = araclari_getir()
         print(f"✅ {len(araclar)} araç bulundu")
         

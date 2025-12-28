@@ -42,7 +42,6 @@ function RotaPlanlama({ userRole }) {
   };
 
   const handleCalculateRoute = async () => {
-    // Senaryo seçimi opsiyonel oldu
     setLoading(true);
     setBilgi("Optimum rota hesaplanıyor (Clarke-Wright)...");
     
@@ -52,21 +51,19 @@ function RotaPlanlama({ userRole }) {
         problem_tipi: problemTipi
       };
       
-      // Senaryo seçiliyse ekle (opsiyonel)
       if (seciliSenaryoId) {
         requestData.senaryo_id = parseInt(seciliSenaryoId);
       }
 
-      console.log("Request Data:", requestData); // Debug
+      console.log("Request Data:", requestData);
 
       const res = await routeService.planRoute(requestData);
 
-      console.log("API Response:", res); // Debug
+      console.log("API Response:", res);
 
       if (res.basarili) {
         setRota(res.rotalar);
         
-        // Özet bilgileri göster
         const ozet = res.ozet;
         const mesaj = `Hesaplandı! 
           ${ozet.kullanilan_arac_sayisi} araç, 
@@ -81,16 +78,12 @@ function RotaPlanlama({ userRole }) {
     } catch (error) {
       console.error("Rota hesaplama hatası:", error);
       
-      // Detaylı hata mesajı
       if (error.response) {
-        // Backend'den dönen hata
         const detay = error.response.data?.detail || error.response.statusText;
         setBilgi(`Backend Hatası: ${detay}`);
       } else if (error.request) {
-        // Backend'e ulaşılamadı
         setBilgi("Backend'e bağlanılamıyor! Sunucu çalışıyor mu?");
       } else {
-        // Diğer hatalar
         setBilgi("Hata: " + error.message);
       }
     } finally {
@@ -102,7 +95,6 @@ function RotaPlanlama({ userRole }) {
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={mapHeaderStyle}>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          {/* Senaryo Seçici - OPSIYONEL */}
           <select 
             style={selectStyle} 
             value={seciliSenaryoId} 
@@ -114,7 +106,6 @@ function RotaPlanlama({ userRole }) {
             ))}
           </select>
 
-          {/* Problem Tipi Seçici */}
           <select 
             style={selectStyle} 
             value={problemTipi} 
@@ -137,7 +128,6 @@ function RotaPlanlama({ userRole }) {
       </div>
 
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* Rota Detay Paneli */}
         {rota.length > 0 && (
           <div style={sidePanelStyle}>
             <h4 style={{ color: "#4caf50", marginTop: 0, borderBottom: "1px solid #333", paddingBottom: "10px" }}>
@@ -155,7 +145,6 @@ function RotaPlanlama({ userRole }) {
                    </span>
                 </div>
                 
-                {/* Durakları listeleme */}
                 <div style={{ fontSize: "0.75rem", margin: "10px 0", color: "#ddd" }}>
                   {r.duraklar && r.duraklar.map((d, dIdx) => (
                     <div key={dIdx} style={{ marginBottom: "3px" }}>
@@ -187,7 +176,6 @@ function RotaPlanlama({ userRole }) {
   );
 }
 
-// Stiller
 const mapHeaderStyle = {
   display: "flex",
   justifyContent: "space-between",

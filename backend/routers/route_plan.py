@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Rota Planlama Router
-API endpoint'leri için FastAPI router tanımları
-"""
-
 import logging
 from datetime import datetime
 from typing import Optional, List, Dict, Any
@@ -17,23 +11,16 @@ from services.supabase_service import (
     rota_ozetlerini_getir
 )
 
-# Logger ayarla
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Router oluştur
 router = APIRouter(
     prefix="/api/routes",
     tags=["Rota Planlama"]
 )
 
 
-# ============================================
-# REQUEST/RESPONSE MODELLERİ
-# ============================================
-
 class RotaPlanlamaRequest(BaseModel):
-    """Rota planlama request modeli"""
     tarih: str = Field(..., description="Planlama tarihi (YYYY-MM-DD)")
     kargo_ids: Optional[List[int]] = Field(None, description="Spesifik kargo ID'leri")
     senaryo_id: Optional[int] = Field(None, description="Senaryo ID (test için)")
@@ -44,7 +31,6 @@ class RotaPlanlamaRequest(BaseModel):
     
     @validator('problem_tipi')
     def validate_problem_tipi(cls, v):
-        """Problem tipi validasyonu"""
         valid_types = ['sinirsiz_arac', 'belirli_arac']
         if v not in valid_types:
             raise ValueError(f"Problem tipi '{v}' geçersiz. Geçerli tipler: {valid_types}")
@@ -52,7 +38,6 @@ class RotaPlanlamaRequest(BaseModel):
     
     @validator('tarih')
     def validate_tarih(cls, v):
-        """Tarih formatı validasyonu"""
         try:
             datetime.strptime(v, "%Y-%m-%d")
         except ValueError:
@@ -71,7 +56,6 @@ class RotaPlanlamaRequest(BaseModel):
 
 
 class SistemAyarlariUpdate(BaseModel):
-    """Sistem ayarları güncelleme modeli"""
     km_basi_maliyet: Optional[float] = Field(None, ge=0, description="Km başı maliyet")
     kiralama_maliyeti_500kg: Optional[float] = Field(None, ge=0, description="500kg araç kiralama")
     kiralama_maliyeti_750kg: Optional[float] = Field(None, ge=0, description="750kg araç kiralama")
@@ -87,13 +71,11 @@ class SistemAyarlariUpdate(BaseModel):
 
 
 class KarsilastirmaRequest(BaseModel):
-    """Karşılaştırma request modeli"""
     tarih: str = Field(..., description="Karşılaştırma tarihi (YYYY-MM-DD)")
     kargo_ids: Optional[List[int]] = Field(None, description="Test kargo ID'leri")
     
     @validator('tarih')
     def validate_tarih(cls, v):
-        """Tarih formatı validasyonu"""
         try:
             datetime.strptime(v, "%Y-%m-%d")
         except ValueError:
@@ -101,20 +83,7 @@ class KarsilastirmaRequest(BaseModel):
         return v
 
 
-# ============================================
-# YARDIMCI FONKSİYONLAR
-# ============================================
-
 def hesapla_kabul_orani(ozet: Dict) -> float:
-    """
-    Kabul oranını hesaplar.
-    
-    Args:
-        ozet: Rota özet dictionary
-    
-    Returns:
-        float: Kabul oranı (%)
-    """
     try:
         tasınan = ozet.get("tasınan_kargo_sayisi", 0)
         toplam = tasınan + ozet.get("reddedilen_kargo_sayisi", 0)
@@ -128,49 +97,14 @@ def hesapla_kabul_orani(ozet: Dict) -> float:
         return 0.0
 
 
-# ============================================
-# ROTA PLANLAMA ENDPOINT'LERİ
-# ============================================
-
 @router.post("/plan", summary="Rota Planla")
 async def plan_route(
     request: RotaPlanlamaRequest,
     kullanici_id: Optional[str] = Query(None, description="Kullanıcı ID")
 ):
-    """
-    Verilen tarih için rota planlaması yapar.
-    
-    **Problem Tipleri:**
-    - `sinirsiz_arac`: Gerektiğinde araç kiralar, tüm kargolar taşınır
-    - `belirli_arac`: Sadece mevcut araçları kullanır, kapasiteye göre kargo seçer
-    
-    **Parametreler:**
-    - tarih: YYYY-MM-DD formatında planlama tarihi
-    - problem_tipi: Çözüm yaklaşımı
-    - kargo_ids: (Opsiyonel) Sadece belirli kargoları planla
-    - senaryo_id: (Opsiyonel) Test senaryosu ID'si
-    
-    **Dönen Değer:**
-    ```json
-    {
-      "basarili": true,
-      "mesaj": "X rota başarıyla planlandı",
-      "rotalar": [...],
-      "ozet": {
-        "toplam_km": 250.5,
-        "toplam_maliyet": 450.5,
-        "kullanilan_arac_sayisi": 3,
-        "tasınan_kargo_sayisi": 100,
-        "reddedilen_kargo_sayisi": 0,
-        "kabul_orani": 100.0
-      }
-    }
-    ```
-    """
     try:
         logger.info(f"Rota planlama isteği: {request.tarih}, {request.problem_tipi}")
         
-        # Controller'ı çağır
         sonuc = RouteController.solve_route(
             tarih=request.tarih,
             kargo_ids=request.kargo_ids,
@@ -179,7 +113,6 @@ async def plan_route(
             problem_tipi=request.problem_tipi
         )
         
-        # Kabul oranını hesapla ve ekle
         if "ozet" in sonuc:
             sonuc["ozet"]["kabul_orani"] = hesapla_kabul_orani(sonuc["ozet"])
         
@@ -193,7 +126,6 @@ async def plan_route(
     except HTTPException:
         raise
     except ValueError as e:
-        # Pydantic validation hataları
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Rota planlama hatası: {e}", exc_info=True)
@@ -210,23 +142,12 @@ async def list_routes(
     limit: int = Query(100, ge=1, le=1000, description="Maksimum kayıt sayısı"),
     offset: int = Query(0, ge=0, description="Atlama sayısı (pagination)")
 ):
-    """
-    Kaydedilmiş rotaları listeler.
-    
-    **Filtreler:**
-    - tarih: Belirli bir tarihteki rotalar
-    - arac_id: Belirli bir araca ait rotalar
-    - limit: Sayfa başına kayıt sayısı
-    - offset: Sayfa numarası için
-    """
     try:
         rotalar = rota_ozetlerini_getir(tarih=tarih)
         
-        # Araç ID filtresi
         if arac_id:
             rotalar = [r for r in rotalar if r.get("arac_id") == arac_id]
         
-        # Pagination
         toplam = len(rotalar)
         rotalar = rotalar[offset:offset + limit]
         
@@ -249,16 +170,7 @@ async def list_routes(
 
 @router.get("/details/{rota_id}", summary="Rota Detayları")
 async def get_route_details(rota_id: str):
-    """
-    Belirli bir rotanın detaylı bilgilerini getirir.
-    
-    **Dönen bilgiler:**
-    - Rota özeti (mesafe, maliyet, duraklar)
-    - Durak detayları (sıra, istasyon, yük, mesafe)
-    - Çizim koordinatları (harita için)
-    """
     try:
-        # Rota özetini getir
         ozet = supabase_admin.table("rota_ozetleri")\
             .select("*")\
             .eq("id", rota_id)\
@@ -270,7 +182,6 @@ async def get_route_details(rota_id: str):
                 detail=f"Rota bulunamadı: {rota_id}"
             )
         
-        # Detayları getir
         detaylar = supabase_admin.table("rota_detaylari")\
             .select("*, istasyonlar(isim, lat, lon)")\
             .eq("rota_oz_id", rota_id)\
@@ -301,23 +212,13 @@ async def delete_routes(
     kullanici_id: Optional[str] = Query(None, description="Kullanıcı ID"),
     confirm: bool = Query(False, description="Silme onayı")
 ):
-    """
-    Belirli bir tarihteki tüm rotaları siler.
-    
-    **Uyarı:** Bu işlem geri alınamaz!
-    
-    **Kullanım:**
-    - confirm=true parametresi ile çağrılmalıdır
-    """
     try:
-        # Onay kontrolü
         if not confirm:
             raise HTTPException(
                 status_code=400,
                 detail="Silme işlemi için confirm=true parametresi gerekli"
             )
         
-        # Tarih validasyonu
         try:
             datetime.strptime(tarih, "%Y-%m-%d")
         except ValueError:
@@ -344,19 +245,8 @@ async def delete_routes(
         )
 
 
-# ============================================
-# SİSTEM AYARLARI ENDPOINT'LERİ
-# ============================================
-
 @router.get("/settings", summary="Sistem Ayarlarını Getir")
 async def get_settings():
-    """
-    Mevcut sistem ayarlarını getirir.
-    
-    **Ayarlar:**
-    - km_basi_maliyet: Kilometre başına yakıt maliyeti
-    - kiralama_maliyeti_XXXkg: Araç kiralama maliyetleri
-    """
     try:
         ayarlar = sistem_ayarlarini_getir()
         
@@ -378,25 +268,7 @@ async def update_settings(
     ayarlar: SistemAyarlariUpdate,
     kullanici_id: Optional[str] = Query(None, description="Kullanıcı ID")
 ):
-    """
-    Sistem ayarlarını günceller.
-    
-    **Güncellenebilir ayarlar:**
-    - km_basi_maliyet
-    - kiralama_maliyeti_500kg
-    - kiralama_maliyeti_750kg
-    - kiralama_maliyeti_1000kg
-    
-    **Örnek:**
-    ```json
-    {
-      "km_basi_maliyet": 1.5,
-      "kiralama_maliyeti_500kg": 220.0
-    }
-    ```
-    """
     try:
-        # Sadece gönderilen alanları güncelle
         payload = ayarlar.model_dump(exclude_none=True)
         
         if not payload:
@@ -423,27 +295,12 @@ async def update_settings(
         )
 
 
-# ============================================
-# İSTATİSTİK ENDPOINT'LERİ
-# ============================================
-
 @router.get("/statistics", summary="Rota İstatistikleri")
 async def get_statistics(
     baslangic_tarih: Optional[str] = Query(None, description="Başlangıç tarihi (YYYY-MM-DD)"),
     bitis_tarih: Optional[str] = Query(None, description="Bitiş tarihi (YYYY-MM-DD)")
 ):
-    """
-    Genel rota istatistiklerini getirir.
-    
-    **İstatistikler:**
-    - Toplam rota sayısı
-    - Toplam mesafe
-    - Toplam maliyet
-    - Ortalama doluluk oranı
-    - Araç kullanım dağılımı
-    """
     try:
-        # Tarih validasyonu
         if baslangic_tarih:
             try:
                 datetime.strptime(baslangic_tarih, "%Y-%m-%d")
@@ -456,7 +313,6 @@ async def get_statistics(
             except ValueError:
                 raise HTTPException(400, "Geçersiz bitiş tarihi formatı")
         
-        # Rota verilerini getir
         query = supabase_admin.table("rota_ozetleri").select("*")
         
         if baslangic_tarih:
@@ -477,12 +333,10 @@ async def get_statistics(
                 }
             }
         
-        # İstatistikleri hesapla
         toplam_rota = len(rotalar)
         toplam_km = sum(r.get("toplam_km", 0) for r in rotalar)
         toplam_maliyet = sum(r.get("toplam_maliyet", 0) for r in rotalar)
         
-        # Araç kullanımı
         arac_kullanim = {}
         for r in rotalar:
             arac_id = r.get("arac_id", "bilinmeyen")
@@ -521,66 +375,36 @@ async def get_statistics(
         )
 
 
-# ============================================
-# KARŞILAŞTIRMA ENDPOINT'İ
-# ============================================
-
 @router.post("/compare", summary="Problem Tipi Karşılaştırması")
 async def compare_problem_types(request: KarsilastirmaRequest):
-    """
-    Aynı kargolar için her iki problem tipini de çözer ve karşılaştırır.
-    
-    **Kullanım:** Hangi yaklaşımın daha iyi olduğunu görmek için
-    
-    **Dönen Değer:**
-    ```json
-    {
-      "sinirsiz_arac": {özet},
-      "belirli_arac": {özet},
-      "karsilastirma": {
-        "maliyet_farki": 150.0,
-        "km_farki": 50.0,
-        "kabul_orani_farki": 5.0,
-        "arac_sayisi_farki": 2
-      },
-      "tavsiye": "Sınırsız araç"
-    }
-    ```
-    """
     try:
         logger.info(f"Karşılaştırma başlatıldı: {request.tarih}")
         
-        # Sınırsız araç çözümü
         sinirsiz_sonuc = RouteController.solve_route(
             tarih=request.tarih,
             kargo_ids=request.kargo_ids,
             problem_tipi="sinirsiz_arac"
         )
         
-        # Kabul oranını hesapla
         sinirsiz_sonuc["ozet"]["kabul_orani"] = hesapla_kabul_orani(
             sinirsiz_sonuc["ozet"]
         )
         
-        # Eski rotaları temizle (belirli araç için)
         try:
             RouteController.delete_route(request.tarih)
         except Exception as e:
             logger.warning(f"Eski rotalar temizlenemedi: {e}")
         
-        # Belirli araç çözümü
         belirli_sonuc = RouteController.solve_route(
             tarih=request.tarih,
             kargo_ids=request.kargo_ids,
             problem_tipi="belirli_arac"
         )
         
-        # Kabul oranını hesapla
         belirli_sonuc["ozet"]["kabul_orani"] = hesapla_kabul_orani(
             belirli_sonuc["ozet"]
         )
         
-        # Karşılaştırma yap
         karsilastirma = {
             "maliyet_farki": round(
                 sinirsiz_sonuc["ozet"]["toplam_maliyet"] - 
@@ -603,7 +427,6 @@ async def compare_problem_types(request: KarsilastirmaRequest):
             )
         }
         
-        # Tavsiye mantığı
         if karsilastirma["kabul_orani_farki"] > 10:
             tavsiye = "Sınırsız araç (Daha fazla kargo taşınıyor)"
             tavsiye_neden = "Kabul oranı %10'dan fazla yüksek"
@@ -636,23 +459,12 @@ async def compare_problem_types(request: KarsilastirmaRequest):
         )
 
 
-# ============================================
-# SAĞLIK KONTROLÜ
-# ============================================
-
 @router.get("/health", summary="Sistem Sağlık Kontrolü")
 async def health_check():
-    """
-    Rota planlama sisteminin sağlık durumunu kontrol eder.
-    """
     try:
-        # Sistem ayarlarını kontrol et
         ayarlar = sistem_ayarlarini_getir()
-        
-        # OSMnx durumunu kontrol et
         from services.vrp_clark_wright import KOCAELI_GRAPH, OSM_AVAILABLE
         
-        # Veritabanı bağlantısını test et
         try:
             test_query = supabase_admin.table("istasyonlar").select("count").limit(1).execute()
             db_baglanti = True

@@ -12,27 +12,19 @@ import { styles } from "../styles/Raporlar.styles";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// ============================================
-// HARITA YÖNETİMİ
-// ============================================
-
-// Harita odağını ve boyutunu anlık düzelten bileşen
 function RecenterMap({ coords }) {
   const map = useMap();
   useEffect(() => {
     if (coords && coords.length > 0) {
-      // İlk koordinatı merkez al
       const bounds = L.latLngBounds(coords);
       map.fitBounds(bounds, { padding: [50, 50] });
       
-      // Haritanın kaybolmasını engelleyen kritik komut
       setTimeout(() => map.invalidateSize(), 100);
     }
   }, [coords, map]);
   return null;
 }
 
-// Numaralı Durak İkonu Oluşturucu
 const createNumberedIcon = (number, isLast = false, isFirst = false) => {
   const bgColor = isLast ? "#e74c3c" : isFirst ? "#3498db" : "#4caf50";
   const label = isLast ? "🏫" : isFirst ? "🏁" : number;
@@ -60,12 +52,7 @@ const createNumberedIcon = (number, isLast = false, isFirst = false) => {
   });
 };
 
-// ============================================
-// ANA COMPONENT
-// ============================================
-
 export default function Raporlar() {
-  // State yönetimi
   const [seciliTarih, setSeciliTarih] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -78,17 +65,11 @@ export default function Raporlar() {
   const [istatistikler, setIstatistikler] = useState(null);
   const [istasyonlar, setIstasyonlar] = useState([]);
 
-  // İlk yükleme ve tarih değişiminde rotaları getir
   useEffect(() => {
     rotaOzetleriniGetir();
     istasyonlariGetir();
   }, [seciliTarih]);
 
-  // ============================================
-  // VERİ GETİRME FONKSİYONLARI
-  // ============================================
-
-  // İstasyonları getir (harita için koordinatlar)
   const istasyonlariGetir = async () => {
     try {
       const { data, error } = await supabase
@@ -103,7 +84,6 @@ export default function Raporlar() {
     }
   };
 
-  // Rota özetlerini getir
   const rotaOzetleriniGetir = async () => {
     setLoading(true);
     setSeciliRota(null);
@@ -111,7 +91,6 @@ export default function Raporlar() {
     setRotaDetaylari([]);
     
     try {
-      // Rotaları getir
       const { data: rotaData, error: rotaError } = await supabase
         .from("rota_ozetleri")
         .select("*")
@@ -121,7 +100,6 @@ export default function Raporlar() {
       if (rotaError) throw rotaError;
       setRotalar(rotaData || []);
 
-      // İstatistikleri hesapla
       if (rotaData && rotaData.length > 0) {
         const stats = {
           toplam_rota: rotaData.length,
@@ -146,7 +124,6 @@ export default function Raporlar() {
     }
   };
 
-  // Rota detaylarını getir
   const rotaDetayGetir = async (rota) => {
     setSeciliRota(rota);
     setRotaKargolari([]);
@@ -154,7 +131,6 @@ export default function Raporlar() {
     setDurakNoktalari([]);
     
     try {
-      // 1. Kargo bilgilerini getir
       const { data: kargoData, error: kargoError } = await supabase
         .from("kargolar")
         .select(`
@@ -168,7 +144,6 @@ export default function Raporlar() {
       if (kargoError) throw kargoError;
       setRotaKargolari(kargoData || []);
 
-      // 2. Rota detaylarını getir (durak sırası için)
       const { data: detayData, error: detayError } = await supabase
         .from("rota_detaylari")
         .select(`
@@ -181,7 +156,6 @@ export default function Raporlar() {
       if (detayError) throw detayError;
       setRotaDetaylari(detayData || []);
 
-      // 3. Durak noktalarını hazırla
       if (detayData && detayData.length > 0) {
         const duraklar = detayData.map((d, index) => ({
           sira: d.sira,
@@ -202,10 +176,6 @@ export default function Raporlar() {
       console.error("Detay getirme hatası:", err.message);
     }
   };
-
-  // ============================================
-  // YARDIMCI FONKSİYONLAR
-  // ============================================
 
   const formatTarih = (tarihStr) => {
     if (!tarihStr) return "-";
@@ -228,13 +198,8 @@ export default function Raporlar() {
     return renkler[durum] || "#888";
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
-
   return (
     <div style={styles.container}>
-      {/* HEADER */}
       <div style={styles.header}>
         <div>
           <h2 style={{ color: "#4caf50", margin: 0 }}>
@@ -270,7 +235,6 @@ export default function Raporlar() {
         </div>
       </div>
 
-      {/* İSTATİSTİK KARTLARI */}
       <div style={styles.statsContainer}>
         <div style={styles.statCard}>
           <div style={styles.statIcon}>🚚</div>
@@ -313,9 +277,7 @@ export default function Raporlar() {
         </div>
       </div>
 
-      {/* ANA İÇERİK - SIDEBAR + MAP */}
       <div style={styles.mainLayout}>
-        {/* SOL SIDEBAR - ROTA LİSTESİ */}
         <div style={styles.sidebar}>
           <h3 style={styles.sectionTitle}>🚚 Araç Rotaları</h3>
           
@@ -371,7 +333,6 @@ export default function Raporlar() {
                   </span>
                 </div>
 
-                {/* DURAK LİSTESİ (Seçili rotada) */}
                 {seciliRota?.id === r.id && durakNoktalari.length > 0 && (
                   <div
                     style={{
@@ -437,7 +398,6 @@ export default function Raporlar() {
           )}
         </div>
 
-        {/* SAĞ İÇERİK - HARITA VE DETAYLAR */}
         <div style={styles.content}>
           {seciliRota ? (
             <div style={{ 
@@ -446,7 +406,6 @@ export default function Raporlar() {
               height: "100%", 
               gap: "20px" 
             }}>
-              {/* ROTA BANNER */}
               <div style={styles.rotaBanner}>
                 <div>
                   <h3 style={{ margin: 0, color: "#fff" }}>
@@ -464,7 +423,6 @@ export default function Raporlar() {
                 <div style={{ color: "#4caf50", fontSize: "2rem" }}>🚛</div>
               </div>
 
-              {/* HARİTA */}
               <div style={styles.mapWrapper}>
                 <MapContainer
                   center={[40.76, 29.95]}
@@ -480,7 +438,6 @@ export default function Raporlar() {
                     <RecenterMap coords={durakNoktalari.map(d => d.coords)} />
                   )}
 
-                  {/* ROTA ÇİZGİSİ */}
                   {seciliRota.cizim_koordinatlari?.length > 1 && (
                     <Polyline
                       positions={seciliRota.cizim_koordinatlari}
@@ -490,7 +447,6 @@ export default function Raporlar() {
                     />
                   )}
 
-                  {/* DURAK MARKERLAR */}
                   {durakNoktalari.map((d, index) => (
                     <Marker
                       key={index}
@@ -528,7 +484,6 @@ export default function Raporlar() {
                 </MapContainer>
               </div>
 
-              {/* KARGO SAHİPLERİ TABLOSU */}
               <div style={styles.tableWrapper}>
                 <h3 style={styles.sectionTitle}>
                   📦 Kargo Sahipleri ({rotaKargolari.length} adet)
